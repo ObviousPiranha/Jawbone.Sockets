@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "Piranha.Sockets"
+		},
+		{
+			"path": "Piranha.Sockets.Test"
+		}
+	],
+	"settings": {}
+}

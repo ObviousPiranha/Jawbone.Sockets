@@ -1,8 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
+    <Authors>TheBuzzSaw</Authors>
+    <Company>Obvious Piranha LLC</Company>
+    <Version>0.0.1</Version>
+    <Title>Piranha.Sockets</Title>
+    <Description>High performance low allocation sockets</Description>
+    <Copyright>Copyright 2025 Obvious Piranha</Copyright>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
   </PropertyGroup>

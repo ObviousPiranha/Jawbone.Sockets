@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <!-- Enable central package management, https://learn.microsoft.com/en-us/nuget/consume-packages/Central-Package-Management -->
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0"/>
+    <PackageVersion Include="xunit.v3" Version="2.0.1"/>
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.0.2"/>
+  </ItemGroup>
+</Project>

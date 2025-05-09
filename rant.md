@@ -1,0 +1,10 @@
+# Motivation
+
+When C# was born, it was created with the mantra "small heap allocations are free". Most code just freely created strings, arrays, and delegates with no concern for GC pressure. After all, "engineering time is cheaper than compute time", right? Just have your method return a new `byte[]`. It makes the method signature so nice and pretty and easy to understand! Need to process a portion of a string? Just isolate the segment and spin it off into a brand new string! ALLOCATE ALL THE THINGS. It's kind of ironic that 20 years later, even despite the many crazy improvements in computer hardware, we're now realizing two things: allocations are, in fact, _not_ that cheap, and data locality is actually kind of important.
+
+The .NET socket APIs were created in this early era. All the design focus went into develop ergonomics and proper object hierarchies. The type `IPAddress` is, _unfortunately_, a class. That means every instance has 24 bytes of overhead in 64-bit systems (12 bytes in 32-bit systems) just to exist. From there, `IPAddress` serves as a hybrid for IPv4 and IPv6 addresses. Internally, the class only has room for an IPv4 address. So, what if you want an IPv6 address? The object allocates an array to hold the rest of the bytes needed for those extra long addresses. And now, what if you want to pair that address with a port? You need the `IPEndPoint` class, which extends the **abstract class** `EndPoint`. So, tracking a single IPv6 endpoint (address and port) is 3 heap allocations.
+
+Also, 'endpoint' is one word. Not sure what happened there. 🙃
+
+Ultimately, the other problem with the included sockets API is that they are too low level. They have all this ceremony around picking socket types, address families, etc. An attempt was made to simpify this with UDP-specific and TCP-specific classes, but it's just more allocations with bloated interfaces that predate `Span<T>`.
+

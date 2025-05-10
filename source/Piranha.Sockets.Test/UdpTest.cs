@@ -4,6 +4,7 @@ namespace Piranha.Sockets.Test;
 
 public class UdpTest
 {
+    private const int Timeout = 1000;
     private readonly ITestOutputHelper _output;
 
     public UdpTest(ITestOutputHelper output)
@@ -26,7 +27,7 @@ public class UdpTest
         socketB.Send(sendBuffer, AddressV4.Local.OnPort(endpointA.Port));
         var endpointB = socketB.GetSocketName();
 
-        var resultA = socketA.Receive(receiveBuffer, TimeSpan.FromSeconds(1), out var originA);
+        var resultA = socketA.Receive(receiveBuffer, Timeout, out var originA);
         Assert.Equal(endpointB.Port, originA.Port);
         Assert.Equal(AddressV4.Local, originA.Address);
         Assert.Equal(SocketResult.Success, resultA.Result);
@@ -34,7 +35,7 @@ public class UdpTest
         Assert.Equal(receiveBuffer.AsSpan(0, resultA.Count), sendBuffer.AsSpan());
 
         socketA.Send(sendBuffer, AddressV4.Local.OnPort(endpointB.Port));
-        var resultB = socketB.Receive(receiveBuffer, TimeSpan.FromSeconds(1), out var originB);
+        var resultB = socketB.Receive(receiveBuffer, Timeout, out var originB);
         Assert.Equal(endpointA.Port, originB.Port);
         Assert.Equal(AddressV4.Local, originB.Address);
         Assert.Equal(SocketResult.Success, resultB.Result);
@@ -57,7 +58,7 @@ public class UdpTest
         socketB.Send(sendBuffer, AddressV6.Local.OnPort(endpointA.Port));
         var endpointB = socketB.GetSocketName();
 
-        var resultA = socketA.Receive(receiveBuffer, TimeSpan.FromSeconds(1), out var originA);
+        var resultA = socketA.Receive(receiveBuffer, Timeout, out var originA);
         Assert.Equal(endpointB.Port, originA.Port);
         Assert.Equal(AddressV6.Local, originA.Address);
         Assert.Equal(SocketResult.Success, resultA.Result);
@@ -65,7 +66,7 @@ public class UdpTest
         Assert.Equal(receiveBuffer.AsSpan(0, resultA.Count), sendBuffer.AsSpan());
 
         socketA.Send(sendBuffer, AddressV6.Local.OnPort(endpointB.Port));
-        var resultB = socketB.Receive(receiveBuffer, TimeSpan.FromSeconds(1), out var originB);
+        var resultB = socketB.Receive(receiveBuffer, Timeout, out var originB);
         Assert.Equal(endpointA.Port, originB.Port);
         Assert.Equal(AddressV6.Local, originB.Address);
         Assert.Equal(SocketResult.Success, resultB.Result);
@@ -92,7 +93,7 @@ public class UdpTest
         socketA.Send(sendBuffer, destinationB);
         var endpointA = socketA.GetSocketName();
         var destinationA = v4LocalAsV6.OnPort(endpointA.Port);
-        var resultV6 = socketB.Receive(receiveBuffer, TimeSpan.FromSeconds(1), out var originV6);
+        var resultV6 = socketB.Receive(receiveBuffer, Timeout, out var originV6);
         var debug1 = v4LocalAsV6.ToString();
         var debug2 = originV6.ToString();
         var debug3 = endpointB.ToString();
@@ -105,7 +106,7 @@ public class UdpTest
         Assert.False(receiveBuffer.AsSpan(0, resultV6.Count).SequenceEqual(sendBuffer));
 
         socketB.Send(sendBuffer, destinationA);
-        var resultV4 = socketA.Receive(receiveBuffer, TimeSpan.FromSeconds(1), out var originV4);
+        var resultV4 = socketA.Receive(receiveBuffer, Timeout, out var originV4);
         Assert.Equal(AddressV4.Local, originV4.Address);
         Assert.Equal(SocketResult.Success, resultV4.Result);
         Assert.Equal(sendBuffer.Length, resultV4.Count);
@@ -127,7 +128,7 @@ public class UdpTest
         var destinationB = AddressV4.Local.OnPort(endpointB.Port);
 
         socketA.Send(sendBuffer, destinationB);
-        var result = socketB.Receive(receiveBuffer, TimeSpan.FromSeconds(1), out var origin);
+        var result = socketB.Receive(receiveBuffer, Timeout, out var origin);
         Assert.Equal(SocketResult.Timeout, result.Result);
     }
 
@@ -219,7 +220,7 @@ public class UdpTest
         Assert.Equal(sendResult, message.Length);
 
         Span<byte> buffer = new byte[64];
-        var receiveResult = server.Receive(buffer, TimeSpan.FromSeconds(1), out var origin);
+        var receiveResult = server.Receive(buffer, Timeout, out var origin);
         Assert.Equal(SocketResult.Success, receiveResult.Result);
         Assert.Equal(origin, clientEndpoint);
         Assert.Equal(message, buffer[..receiveResult.Count]);
@@ -238,7 +239,7 @@ public class UdpTest
         Assert.Equal(sendResult, message.Length);
 
         Span<byte> buffer = new byte[64];
-        var receiveResult = server.Receive(buffer, TimeSpan.FromSeconds(1), out var origin);
+        var receiveResult = server.Receive(buffer, Timeout, out var origin);
         Assert.Equal(SocketResult.Success, receiveResult.Result);
         Assert.Equal(origin, clientEndpoint);
         Assert.Equal(message, buffer[..receiveResult.Count]);

@@ -216,14 +216,22 @@ public class UdpTest
         var message = "greetings"u8;
         using var client = UdpClientV4.Connect(serverEndpoint);
         var clientEndpoint = client.GetSocketName();
-        var sendResult = client.Send(message);
-        Assert.Equal(sendResult.Count, message.Length);
+        var clientSendResult = client.Send(message);
+        Assert.Equal(message.Length, clientSendResult.Count);
 
         Span<byte> buffer = new byte[64];
-        var receiveResult = server.Receive(buffer, Timeout, out var origin);
-        Assert.Equal(SocketResult.Success, receiveResult.Result);
+        var serverReceiveResult = server.Receive(buffer, Timeout, out var origin);
+        Assert.Equal(SocketResult.Success, serverReceiveResult.Result);
         Assert.Equal(origin, clientEndpoint);
-        Assert.Equal(message, buffer[..receiveResult.Count]);
+        Assert.Equal(message, buffer[..serverReceiveResult.Count]);
+
+        var message2 = "salutations"u8;
+        var serverSendResult = server.Send(message2, clientEndpoint);
+        Assert.Equal(message2.Length, serverSendResult.Count);
+
+        var clientReceiveResult = client.Receive(buffer, Timeout);
+        Assert.Equal(SocketResult.Success, clientReceiveResult.Result);
+        Assert.Equal(message2, buffer[..clientReceiveResult.Count]);
     }
 
     [Fact]
@@ -235,13 +243,21 @@ public class UdpTest
         var message = "greetings"u8;
         using var client = UdpClientV6.Connect(serverEndpoint);
         var clientEndpoint = client.GetSocketName();
-        var sendResult = client.Send(message);
-        Assert.Equal(sendResult.Count, message.Length);
+        var clientSendResult = client.Send(message);
+        Assert.Equal(message.Length, clientSendResult.Count);
 
         Span<byte> buffer = new byte[64];
-        var receiveResult = server.Receive(buffer, Timeout, out var origin);
-        Assert.Equal(SocketResult.Success, receiveResult.Result);
+        var serverReceiveResult = server.Receive(buffer, Timeout, out var origin);
+        Assert.Equal(SocketResult.Success, serverReceiveResult.Result);
         Assert.Equal(origin, clientEndpoint);
-        Assert.Equal(message, buffer[..receiveResult.Count]);
+        Assert.Equal(message, buffer[..serverReceiveResult.Count]);
+
+        var message2 = "salutations"u8;
+        var serverSendResult = server.Send(message2, clientEndpoint);
+        Assert.Equal(message2.Length, serverSendResult.Count);
+
+        var clientReceiveResult = client.Receive(buffer, Timeout);
+        Assert.Equal(SocketResult.Success, clientReceiveResult.Result);
+        Assert.Equal(message2, buffer[..clientReceiveResult.Count]);
     }
 }

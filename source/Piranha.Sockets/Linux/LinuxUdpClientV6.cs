@@ -23,7 +23,7 @@ sealed class LinuxUdpClientV6 : IUdpClient<AddressV6>
     {
         var result = Sys.Close(_fd);
         if (result == -1)
-            Sys.Throw("Unable to close socket.");
+            Sys.Throw(ExceptionMessages.CloseSocket);
     }
 
     public Endpoint<AddressV6> GetSocketName()
@@ -31,7 +31,7 @@ sealed class LinuxUdpClientV6 : IUdpClient<AddressV6>
         var addressLength = SockAddrStorage.Len;
         var result = Sys.GetSockName(_fd, out _address, ref addressLength);
         if (result == -1)
-            Sys.Throw("Unable to get socket name.");
+            Sys.Throw(ExceptionMessages.GetSocketName);
         return _address.GetV6(addressLength);
     }
 

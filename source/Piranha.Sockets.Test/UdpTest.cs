@@ -217,7 +217,7 @@ public class UdpTest
         using var client = UdpClientV4.Connect(serverEndpoint);
         var clientEndpoint = client.GetSocketName();
         var sendResult = client.Send(message);
-        Assert.Equal(sendResult, message.Length);
+        Assert.Equal(sendResult.Count, message.Length);
 
         Span<byte> buffer = new byte[64];
         var receiveResult = server.Receive(buffer, Timeout, out var origin);
@@ -236,7 +236,7 @@ public class UdpTest
         using var client = UdpClientV6.Connect(serverEndpoint);
         var clientEndpoint = client.GetSocketName();
         var sendResult = client.Send(message);
-        Assert.Equal(sendResult, message.Length);
+        Assert.Equal(sendResult.Count, message.Length);
 
         Span<byte> buffer = new byte[64];
         var receiveResult = server.Receive(buffer, Timeout, out var origin);

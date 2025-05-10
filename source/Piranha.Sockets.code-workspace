@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "Piranha.Sockets.Test"
+		},
+		{
+			"path": "Piranha.Sockets.Benchmarks"
 		}
 	],
 	"settings": {}

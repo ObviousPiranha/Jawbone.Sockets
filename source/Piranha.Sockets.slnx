@@ -4,6 +4,7 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Project Path="Piranha.Sockets.Benchmarks/Piranha.Sockets.Benchmarks.csproj" />
   <Project Path="Piranha.Sockets.Test/Piranha.Sockets.Test.csproj" />
   <Project Path="Piranha.Sockets/Piranha.Sockets.csproj" />
 </Solution>

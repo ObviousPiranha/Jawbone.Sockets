@@ -112,7 +112,7 @@ var timeout = 1000; // One second
 using ITcpClient<AddressV4> server = listener.Accept(timeout);
 if (server is null)
 {
-    // Null object just means it times out or was interrupted.
+    // Null object just means it timed out or was interrupted.
 }
 ```
 

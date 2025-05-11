@@ -1,6 +1,6 @@
 .vscode/
 bin/
 obj/
+BenchmarkDotNet.Artifacts/
 
 .DS_Store
-

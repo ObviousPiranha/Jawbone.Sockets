@@ -1,0 +1,5 @@
+﻿using BenchmarkDotNet.Running;
+using Jawbone.Sockets.Benchmarks;
+
+BenchmarkRunner.Run<TimeSpanBenchmark>();
+

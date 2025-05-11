@@ -1,0 +1,11 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="Jawbone.Sockets.Benchmarks/Jawbone.Sockets.Benchmarks.csproj" />
+  <Project Path="Jawbone.Sockets.Samples/Jawbone.Sockets.Samples.csproj" />
+  <Project Path="Jawbone.Sockets.Test/Jawbone.Sockets.Test.csproj" />
+  <Project Path="Jawbone.Sockets/Jawbone.Sockets.csproj" />
+</Solution>

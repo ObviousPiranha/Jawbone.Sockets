@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "Jawbone.Sockets"
+		},
+		{
+			"path": "Jawbone.Sockets.Test"
+		},
+		{
+			"path": "Jawbone.Sockets.Benchmarks"
+		},
+		{
+			"path": "Jawbone.Sockets.Samples"
+		}
+	],
+	"settings": {}
+}

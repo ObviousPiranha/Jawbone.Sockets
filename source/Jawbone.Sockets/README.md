@@ -2,8 +2,6 @@
 
 UDP and TCP socket library for game engines!
 
-The [TLDR](rant.md) is that the .NET socket libraries allocate way too much and support too many address families. This library focuses on the essentials.
-
 ## Design
 
 ### IP Addresses

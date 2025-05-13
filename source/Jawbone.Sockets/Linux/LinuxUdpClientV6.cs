@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Jawbone.Sockets.Linux;
 
-sealed class LinuxUdpClientV6 : IUdpClient<AddressV6>
+sealed class LinuxUdpClientV6 : IUdpClient<IpAddressV6>
 {
     private readonly int _fd;
     private SockAddrStorage _address;
@@ -11,9 +11,9 @@ sealed class LinuxUdpClientV6 : IUdpClient<AddressV6>
     public InterruptHandling HandleInterruptOnSend { get; set; }
     public InterruptHandling HandleInterruptOnReceive { get; set; }
 
-    public Endpoint<AddressV6> Origin { get; }
+    public IpEndpoint<IpAddressV6> Origin { get; }
 
-    public LinuxUdpClientV6(int fd, Endpoint<AddressV6> origin)
+    public LinuxUdpClientV6(int fd, IpEndpoint<IpAddressV6> origin)
     {
         _fd = fd;
         Origin = origin;
@@ -26,7 +26,7 @@ sealed class LinuxUdpClientV6 : IUdpClient<AddressV6>
             Sys.Throw(ExceptionMessages.CloseSocket);
     }
 
-    public Endpoint<AddressV6> GetSocketName()
+    public IpEndpoint<IpAddressV6> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
         var result = Sys.GetSockName(_fd, out _address, ref addressLength);
@@ -122,7 +122,7 @@ sealed class LinuxUdpClientV6 : IUdpClient<AddressV6>
         return new((int)result);
     }
 
-    public static LinuxUdpClientV6 Connect(Endpoint<AddressV6> endpoint)
+    public static LinuxUdpClientV6 Connect(IpEndpoint<IpAddressV6> endpoint)
     {
         var fd = CreateSocket();
 

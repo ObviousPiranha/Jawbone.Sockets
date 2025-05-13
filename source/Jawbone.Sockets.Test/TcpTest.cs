@@ -11,7 +11,7 @@ public class TcpTest
     {
         using var listener = TcpListenerV4.Listen(default, 1);
         var endpoint = listener.GetSocketName();
-        using var client = TcpClientV4.Connect(AddressV4.Local.OnPort(endpoint.Port));
+        using var client = TcpClientV4.Connect(IpAddressV4.Local.OnPort(endpoint.Port));
         using var server = listener.Accept(Timeout);
         Assert.NotNull(server);
 
@@ -32,7 +32,7 @@ public class TcpTest
     {
         using var listener = TcpListenerV6.Listen(default, 1);
         var endpoint = listener.GetSocketName();
-        using var client = TcpClientV6.Connect(AddressV6.Local.OnPort(endpoint.Port));
+        using var client = TcpClientV6.Connect(IpAddressV6.Local.OnPort(endpoint.Port));
         using var server = listener.Accept(Timeout);
         Assert.NotNull(server);
 
@@ -50,10 +50,10 @@ public class TcpTest
     [Fact]
     public void CanSendTcpV4ToV6WhenAllowed()
     {
-        var bindEndpoint = ((AddressV6)AddressV4.Local).OnAnyPort();
+        var bindEndpoint = ((IpAddressV6)IpAddressV4.Local).OnAnyPort();
         using var listener = TcpListenerV6.Listen(bindEndpoint, 1, true);
         var listenerName = listener.GetSocketName();
-        var endpointV4 = AddressV4.Local.OnPort(listenerName.Port);
+        var endpointV4 = IpAddressV4.Local.OnPort(listenerName.Port);
         using var client = TcpClientV4.Connect(endpointV4);
         using var server = listener.Accept(Timeout);
         Assert.NotNull(server);

@@ -3,13 +3,13 @@ using System;
 namespace Jawbone.Sockets;
 
 public interface IUdpClient<TAddress> : IDisposable
-    where TAddress : unmanaged, IAddress<TAddress>
+    where TAddress : unmanaged, IIpAddress<TAddress>
 {
     InterruptHandling HandleInterruptOnSend { get; set; }
     InterruptHandling HandleInterruptOnReceive { get; set; }
 
-    Endpoint<TAddress> Origin { get; }
+    IpEndpoint<TAddress> Origin { get; }
     TransferResult Send(ReadOnlySpan<byte> message);
     TransferResult Receive(Span<byte> buffer, int timeoutInMilliseconds);
-    Endpoint<TAddress> GetSocketName();
+    IpEndpoint<TAddress> GetSocketName();
 }

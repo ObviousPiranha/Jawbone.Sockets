@@ -2,7 +2,7 @@ using System;
 
 namespace Jawbone.Sockets.Mac;
 
-sealed class MacTcpListenerV4 : ITcpListener<AddressV4>
+sealed class MacTcpListenerV4 : ITcpListener<IpAddressV4>
 {
     private readonly int _fd;
     private SockAddrStorage _address;
@@ -12,7 +12,7 @@ sealed class MacTcpListenerV4 : ITcpListener<AddressV4>
 
     private MacTcpListenerV4(int fd) => _fd = fd;
 
-    public ITcpClient<AddressV4>? Accept(int timeoutInMilliseconds)
+    public ITcpClient<IpAddressV4>? Accept(int timeoutInMilliseconds)
     {
         WasInterrupted = false;
         var milliseconds = int.Max(0, timeoutInMilliseconds);
@@ -78,7 +78,7 @@ sealed class MacTcpListenerV4 : ITcpListener<AddressV4>
         return null;
     }
 
-    public Endpoint<AddressV4> GetSocketName()
+    public IpEndpoint<IpAddressV4> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
         var result = Sys.GetSockName(_fd, out _address, ref addressLength);
@@ -94,7 +94,7 @@ sealed class MacTcpListenerV4 : ITcpListener<AddressV4>
             Sys.Throw(ExceptionMessages.CloseSocket);
     }
 
-    public static MacTcpListenerV4 Listen(Endpoint<AddressV4> bindEndpoint, int backlog)
+    public static MacTcpListenerV4 Listen(IpEndpoint<IpAddressV4> bindEndpoint, int backlog)
     {
         int fd = Sys.Socket(Af.INet, Sock.Stream, 0);
 

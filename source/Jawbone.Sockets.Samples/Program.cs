@@ -120,8 +120,8 @@ internal class Program
     static void ChatAppServer(string port)
     {
         using var semaphore = new SemaphoreSlim(0);
-        var clients = new Dictionary<Endpoint<AddressV4>, long>();
-        var deadClients = new List<Endpoint<AddressV4>>();
+        var clients = new Dictionary<IpEndpoint<IpAddressV4>, long>();
+        var deadClients = new List<IpEndpoint<IpAddressV4>>();
         using var server = UdpSocketV4.BindAnyIp(int.Parse(port));
         server.HandleInterruptOnReceive = InterruptHandling.Abort;
         Console.WriteLine($"Server listening on port {port}");

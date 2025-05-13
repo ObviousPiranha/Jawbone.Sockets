@@ -4,9 +4,9 @@ namespace Jawbone.Sockets;
 
 public static class TcpListenerV4
 {
-    public static ITcpListener<AddressV4> ListenLocalIp(int backlog) => Listen(AddressV4.Local.OnAnyPort(), backlog);
-    public static ITcpListener<AddressV4> ListenAnyIp(int backlog) => Listen(default, backlog);
-    public static ITcpListener<AddressV4> Listen(Endpoint<AddressV4> bindEndpoint, int backlog)
+    public static ITcpListener<IpAddressV4> ListenLocalIp(int backlog) => Listen(IpAddressV4.Local.OnAnyPort(), backlog);
+    public static ITcpListener<IpAddressV4> ListenAnyIp(int backlog) => Listen(default, backlog);
+    public static ITcpListener<IpAddressV4> Listen(IpEndpoint<IpAddressV4> bindEndpoint, int backlog)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(backlog);
         if (OperatingSystem.IsWindows())

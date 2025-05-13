@@ -15,18 +15,18 @@ struct SockAddrIn
     public uint SinAddr;
     public Zero SinZero;
 
-    public readonly Endpoint<AddressV4> ToEndpoint()
+    public readonly IpEndpoint<IpAddressV4> ToEndpoint()
     {
         if (SinFamily != Af.INet)
             ThrowExceptionFor.WrongAddressFamily();
-        return Endpoint.Create(
-            new AddressV4(SinAddr),
+        return IpEndpoint.Create(
+            new IpAddressV4(SinAddr),
             new NetworkPort { NetworkValue = SinPort });
     }
 
     public static int Len => Unsafe.SizeOf<SockAddrIn>();
 
-    public static SockAddrIn FromEndpoint(Endpoint<AddressV4> endpoint)
+    public static SockAddrIn FromEndpoint(IpEndpoint<IpAddressV4> endpoint)
     {
         return new SockAddrIn
         {

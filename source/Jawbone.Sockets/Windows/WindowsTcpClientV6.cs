@@ -2,17 +2,17 @@ using System;
 
 namespace Jawbone.Sockets.Windows;
 
-sealed class WindowsTcpClientV6 : ITcpClient<AddressV6>
+sealed class WindowsTcpClientV6 : ITcpClient<IpAddressV6>
 {
     private readonly nuint _fd;
 
-    public Endpoint<AddressV6> Origin { get; }
+    public IpEndpoint<IpAddressV6> Origin { get; }
 
     public InterruptHandling HandleInterruptOnSend { get; set; }
     public InterruptHandling HandleInterruptOnReceive { get; set; }
     public bool HungUp { get; private set; }
 
-    public WindowsTcpClientV6(nuint fd, Endpoint<AddressV6> origin)
+    public WindowsTcpClientV6(nuint fd, IpEndpoint<IpAddressV6> origin)
     {
         _fd = fd;
         Origin = origin;
@@ -114,7 +114,7 @@ sealed class WindowsTcpClientV6 : ITcpClient<AddressV6>
         return new(writeResult);
     }
 
-    public Endpoint<AddressV6> GetSocketName()
+    public IpEndpoint<IpAddressV6> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
         var result = Sys.GetSockName(_fd, out var address, ref addressLength);
@@ -123,7 +123,7 @@ sealed class WindowsTcpClientV6 : ITcpClient<AddressV6>
         return address.GetV6(addressLength);
     }
 
-    public static WindowsTcpClientV6 Connect(Endpoint<AddressV6> endpoint)
+    public static WindowsTcpClientV6 Connect(IpEndpoint<IpAddressV6> endpoint)
     {
         var fd = Sys.Socket(Af.INet6, Sock.Stream, 0);
 

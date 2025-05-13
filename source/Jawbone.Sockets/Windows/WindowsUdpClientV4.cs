@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace Jawbone.Sockets.Windows;
 
-sealed class WindowsUdpClientV4 : IUdpClient<AddressV4>
+sealed class WindowsUdpClientV4 : IUdpClient<IpAddressV4>
 {
     private readonly nuint _fd;
     private SockAddrStorage _address;
@@ -12,9 +12,9 @@ sealed class WindowsUdpClientV4 : IUdpClient<AddressV4>
     public InterruptHandling HandleInterruptOnSend { get; set; }
     public InterruptHandling HandleInterruptOnReceive { get; set; }
 
-    public Endpoint<AddressV4> Origin { get; }
+    public IpEndpoint<IpAddressV4> Origin { get; }
 
-    public WindowsUdpClientV4(nuint fd, Endpoint<AddressV4> origin)
+    public WindowsUdpClientV4(nuint fd, IpEndpoint<IpAddressV4> origin)
     {
         _fd = fd;
         Origin = origin;
@@ -27,7 +27,7 @@ sealed class WindowsUdpClientV4 : IUdpClient<AddressV4>
             Sys.Throw(ExceptionMessages.CloseSocket);
     }
 
-    public Endpoint<AddressV4> GetSocketName()
+    public IpEndpoint<IpAddressV4> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
         var result = Sys.GetSockName(_fd, out _address, ref addressLength);
@@ -123,7 +123,7 @@ sealed class WindowsUdpClientV4 : IUdpClient<AddressV4>
         return new(result);
     }
 
-    public static WindowsUdpClientV4 Connect(Endpoint<AddressV4> endpoint)
+    public static WindowsUdpClientV4 Connect(IpEndpoint<IpAddressV4> endpoint)
     {
         var fd = CreateSocket();
 

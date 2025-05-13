@@ -2,7 +2,7 @@ using System;
 
 namespace Jawbone.Sockets.Windows;
 
-sealed class WindowsTcpListenerV6 : ITcpListener<AddressV6>
+sealed class WindowsTcpListenerV6 : ITcpListener<IpAddressV6>
 {
     private readonly nuint _fd;
     private SockAddrStorage _address;
@@ -12,7 +12,7 @@ sealed class WindowsTcpListenerV6 : ITcpListener<AddressV6>
 
     private WindowsTcpListenerV6(nuint fd) => _fd = fd;
 
-    public ITcpClient<AddressV6>? Accept(int timeoutInMilliseconds)
+    public ITcpClient<IpAddressV6>? Accept(int timeoutInMilliseconds)
     {
         WasInterrupted = false;
         var milliseconds = int.Max(0, timeoutInMilliseconds);
@@ -77,7 +77,7 @@ sealed class WindowsTcpListenerV6 : ITcpListener<AddressV6>
         return null;
     }
 
-    public Endpoint<AddressV6> GetSocketName()
+    public IpEndpoint<IpAddressV6> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
         var result = Sys.GetSockName(_fd, out _address, ref addressLength);
@@ -93,7 +93,7 @@ sealed class WindowsTcpListenerV6 : ITcpListener<AddressV6>
             Sys.Throw(ExceptionMessages.CloseSocket);
     }
 
-    public static WindowsTcpListenerV6 Listen(Endpoint<AddressV6> bindEndpoint, int backlog, bool allowV4)
+    public static WindowsTcpListenerV6 Listen(IpEndpoint<IpAddressV6> bindEndpoint, int backlog, bool allowV4)
     {
         var fd = Sys.Socket(Af.INet6, Sock.Stream, 0);
 

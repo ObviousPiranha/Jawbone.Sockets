@@ -9,7 +9,7 @@ namespace Jawbone.Sockets;
 
 // https://en.wikipedia.org/wiki/IPv6_address
 [StructLayout(LayoutKind.Explicit, Size = 20, Pack = 4)]
-public struct AddressV6 : IAddress<AddressV6>
+public struct IpAddressV6 : IIpAddress<IpAddressV6>
 {
     [StructLayout(LayoutKind.Sequential)]
     [InlineArray(Length)]
@@ -41,15 +41,15 @@ public struct AddressV6 : IAddress<AddressV6>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint LinkLocalSubnet() => BitConverter.IsLittleEndian ? 0x000080fe : 0xfe800000;
 
-    private static AddressV6 CreateLocal()
+    private static IpAddressV6 CreateLocal()
     {
-        var result = default(AddressV6);
+        var result = default(IpAddressV6);
         result.DataU8[^1] = 1;
         return result;
     }
 
-    public static AddressV6 Any => default;
-    public static AddressV6 Local { get; } = CreateLocal();
+    public static IpAddressV6 Any => default;
+    public static IpAddressV6 Local { get; } = CreateLocal();
 
     private static readonly uint PrefixV4 = BitConverter.IsLittleEndian ? 0xffff0000 : 0x0000ffff;
 
@@ -70,23 +70,23 @@ public struct AddressV6 : IAddress<AddressV6>
     public readonly bool IsLoopback => Equals(Local) || (TryMapV4(out var v4) && v4.IsLoopback);
     public readonly bool IsV4Mapped => DataU32[0] == 0 && DataU32[1] == 0 && DataU32[2] == PrefixV4;
 
-    public AddressV6(ReadOnlySpan<byte> values) : this(values, 0)
+    public IpAddressV6(ReadOnlySpan<byte> values) : this(values, 0)
     {
     }
 
-    public AddressV6(ReadOnlySpan<byte> values, uint scopeId) : this()
+    public IpAddressV6(ReadOnlySpan<byte> values, uint scopeId) : this()
     {
         values.Slice(0, ArrayU8.Length).CopyTo(DataU8);
         ScopeId = scopeId;
     }
 
-    public AddressV6(ArrayU32 data, uint scopeId = 0)
+    public IpAddressV6(ArrayU32 data, uint scopeId = 0)
     {
         DataU32 = data;
         ScopeId = scopeId;
     }
 
-    private AddressV6(uint a, uint b, uint c, uint d, uint scopeId = 0)
+    private IpAddressV6(uint a, uint b, uint c, uint d, uint scopeId = 0)
     {
         DataU32[0] = a;
         DataU32[1] = b;
@@ -95,7 +95,7 @@ public struct AddressV6 : IAddress<AddressV6>
         ScopeId = scopeId;
     }
 
-    public readonly bool TryMapV4(out AddressV4 address)
+    public readonly bool TryMapV4(out IpAddressV4 address)
     {
         if (IsV4Mapped)
         {
@@ -109,7 +109,7 @@ public struct AddressV6 : IAddress<AddressV6>
         }
     }
 
-    public readonly bool Equals(AddressV6 other)
+    public readonly bool Equals(IpAddressV6 other)
     {
         return
             DataU32[0] == other.DataU32[0] &&
@@ -120,7 +120,7 @@ public struct AddressV6 : IAddress<AddressV6>
     }
 
     public override readonly bool Equals([NotNullWhen(true)] object? obj)
-        => obj is AddressV6 other && Equals(other);
+        => obj is IpAddressV6 other && Equals(other);
     public override readonly int GetHashCode() => HashCode.Combine(DataU32[0], DataU32[1], DataU32[2], DataU32[3], ScopeId);
     public override readonly string ToString()
     {
@@ -134,7 +134,7 @@ public struct AddressV6 : IAddress<AddressV6>
         if (IsV4Mapped)
         {
             builder.Append("::ffff:");
-            new AddressV4(DataU32[3]).AppendTo(builder);
+            new IpAddressV4(DataU32[3]).AppendTo(builder);
             return;
         }
 
@@ -179,7 +179,7 @@ public struct AddressV6 : IAddress<AddressV6>
             builder.Append('%').Append(ScopeId);
     }
 
-    private static string? DoTheParse(ReadOnlySpan<char> originalInput, out AddressV6 result)
+    private static string? DoTheParse(ReadOnlySpan<char> originalInput, out IpAddressV6 result)
     {
         if (originalInput.IsEmpty)
         {
@@ -214,9 +214,9 @@ public struct AddressV6 : IAddress<AddressV6>
         // for IPv4-mapped addresses, but for now, it is consistent
         // with how AddressV6 converts such addresses to strings.
         const string IntroV4 = "::ffff:";
-        if (s.StartsWith(IntroV4) && AddressV4.TryParse(s[IntroV4.Length..], null, out var a32))
+        if (s.StartsWith(IntroV4) && IpAddressV4.TryParse(s[IntroV4.Length..], null, out var a32))
         {
-            result = (AddressV6)a32;
+            result = (IpAddressV6)a32;
             return null;
         }
 
@@ -361,7 +361,7 @@ public struct AddressV6 : IAddress<AddressV6>
         static int HexLength(int n) => 0xfff < n ? 4 : 0xff < n ? 3 : 0xf < n ? 2 : 1;
     }
 
-    public static AddressV6 Parse(ReadOnlySpan<char> s, IFormatProvider? provider)
+    public static IpAddressV6 Parse(ReadOnlySpan<char> s, IFormatProvider? provider)
     {
         var exceptionMessage = DoTheParse(s, out var result);
         if (exceptionMessage is not null)
@@ -369,13 +369,13 @@ public struct AddressV6 : IAddress<AddressV6>
         return result;
     }
 
-    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, [MaybeNullWhen(false)] out AddressV6 result)
+    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, [MaybeNullWhen(false)] out IpAddressV6 result)
     {
         var exceptionMessage = DoTheParse(s, out result);
         return exceptionMessage is null;
     }
 
-    public static AddressV6 Parse(string s, IFormatProvider? provider)
+    public static IpAddressV6 Parse(string s, IFormatProvider? provider)
     {
         ArgumentNullException.ThrowIfNull(s);
         var exceptionMessage = DoTheParse(s, out var result);
@@ -384,19 +384,16 @@ public struct AddressV6 : IAddress<AddressV6>
         return result;
     }
 
-    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out AddressV6 result)
+    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out IpAddressV6 result)
     {
         var exceptionMessage = DoTheParse(s, out result);
         return exceptionMessage is null;
     }
 
-    public static Span<byte> AsBytes(ref AddressV6 address) => address.DataU8;
-    public static ReadOnlySpan<byte> AsReadOnlyBytes(ref readonly AddressV6 address) => address.DataU8;
-
-    public static bool operator ==(AddressV6 a, AddressV6 b) => a.Equals(b);
-    public static bool operator !=(AddressV6 a, AddressV6 b) => !a.Equals(b);
-    public static explicit operator AddressV6(AddressV4 address) => new(0, 0, PrefixV4, address.DataU32);
-    public static explicit operator AddressV4(AddressV6 address)
+    public static bool operator ==(IpAddressV6 a, IpAddressV6 b) => a.Equals(b);
+    public static bool operator !=(IpAddressV6 a, IpAddressV6 b) => !a.Equals(b);
+    public static explicit operator IpAddressV6(IpAddressV4 address) => new(0, 0, PrefixV4, address.DataU32);
+    public static explicit operator IpAddressV4(IpAddressV6 address)
     {
         if (!address.IsV4Mapped)
             throw new InvalidCastException("IPv6 address is not IPv4-mapped.");

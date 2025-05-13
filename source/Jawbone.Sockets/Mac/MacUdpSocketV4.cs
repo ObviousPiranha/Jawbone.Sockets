@@ -2,7 +2,7 @@ using System;
 
 namespace Jawbone.Sockets.Mac;
 
-sealed class MacUdpSocketV4 : IUdpSocket<AddressV4>
+sealed class MacUdpSocketV4 : IUdpSocket<IpAddressV4>
 {
     private readonly int _fd;
     private SockAddrStorage _address;
@@ -22,7 +22,7 @@ sealed class MacUdpSocketV4 : IUdpSocket<AddressV4>
             Sys.Throw(ExceptionMessages.CloseSocket);
     }
 
-    public unsafe TransferResult Send(ReadOnlySpan<byte> message, Endpoint<AddressV4> destination)
+    public unsafe TransferResult Send(ReadOnlySpan<byte> message, IpEndpoint<IpAddressV4> destination)
     {
         var sa = SockAddrIn.FromEndpoint(destination);
 
@@ -51,7 +51,7 @@ sealed class MacUdpSocketV4 : IUdpSocket<AddressV4>
     public unsafe TransferResult Receive(
         Span<byte> buffer,
         int timeoutInMilliseconds,
-        out Endpoint<AddressV4> origin)
+        out IpEndpoint<IpAddressV4> origin)
     {
         var milliseconds = int.Max(0, timeoutInMilliseconds);
         var pfd = new PollFd { Fd = _fd, Events = Poll.In };
@@ -120,7 +120,7 @@ sealed class MacUdpSocketV4 : IUdpSocket<AddressV4>
         return new(SocketResult.Timeout);
     }
 
-    public unsafe Endpoint<AddressV4> GetSocketName()
+    public unsafe IpEndpoint<IpAddressV4> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
         var result = Sys.GetSockName(_fd, out _address, ref addressLength);
@@ -135,7 +135,7 @@ sealed class MacUdpSocketV4 : IUdpSocket<AddressV4>
         return new MacUdpSocketV4(fd);
     }
 
-    public static MacUdpSocketV4 Bind(Endpoint<AddressV4> endpoint)
+    public static MacUdpSocketV4 Bind(IpEndpoint<IpAddressV4> endpoint)
     {
         var fd = CreateSocket();
 

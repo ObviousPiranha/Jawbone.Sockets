@@ -4,7 +4,7 @@ namespace Jawbone.Sockets;
 
 public static class TcpClientV4
 {
-    public static ITcpClient<AddressV4> Connect(Endpoint<AddressV4> endpoint)
+    public static ITcpClient<IpAddressV4> Connect(IpEndpoint<IpAddressV4> endpoint)
     {
         if (OperatingSystem.IsWindows())
             return Windows.WindowsTcpClientV4.Connect(endpoint);

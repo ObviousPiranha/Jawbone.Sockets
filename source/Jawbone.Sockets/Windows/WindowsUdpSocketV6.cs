@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Jawbone.Sockets.Windows;
 
-sealed class WindowsUdpSocketV6 : IUdpSocket<AddressV6>
+sealed class WindowsUdpSocketV6 : IUdpSocket<IpAddressV6>
 {
     private readonly nuint _fd;
     private SockAddrStorage _address;
@@ -23,7 +23,7 @@ sealed class WindowsUdpSocketV6 : IUdpSocket<AddressV6>
             Sys.Throw(ExceptionMessages.CloseSocket);
     }
 
-    public unsafe TransferResult Send(ReadOnlySpan<byte> message, Endpoint<AddressV6> destination)
+    public unsafe TransferResult Send(ReadOnlySpan<byte> message, IpEndpoint<IpAddressV6> destination)
     {
         var sa = SockAddrIn6.FromEndpoint(destination);
 
@@ -52,7 +52,7 @@ sealed class WindowsUdpSocketV6 : IUdpSocket<AddressV6>
     public unsafe TransferResult Receive(
         Span<byte> buffer,
         int timeoutInMilliseconds,
-        out Endpoint<AddressV6> origin)
+        out IpEndpoint<IpAddressV6> origin)
     {
         var milliseconds = int.Max(0, timeoutInMilliseconds);
         var pfd = new WsaPollFd { Fd = _fd, Events = Poll.In };
@@ -121,7 +121,7 @@ sealed class WindowsUdpSocketV6 : IUdpSocket<AddressV6>
         return new(SocketResult.Timeout);
     }
 
-    public unsafe Endpoint<AddressV6> GetSocketName()
+    public unsafe IpEndpoint<IpAddressV6> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
         var result = Sys.GetSockName(_fd, out _address, ref addressLength);
@@ -136,7 +136,7 @@ sealed class WindowsUdpSocketV6 : IUdpSocket<AddressV6>
         return new WindowsUdpSocketV6(socket);
     }
 
-    public static WindowsUdpSocketV6 Bind(Endpoint<AddressV6> endpoint, bool allowV4)
+    public static WindowsUdpSocketV6 Bind(IpEndpoint<IpAddressV6> endpoint, bool allowV4)
     {
         var socket = CreateSocket(allowV4);
 

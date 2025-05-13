@@ -4,7 +4,7 @@ namespace Jawbone.Sockets;
 
 public static class TcpClientV6
 {
-    public static ITcpClient<AddressV6> Connect(Endpoint<AddressV6> endpoint)
+    public static ITcpClient<IpAddressV6> Connect(IpEndpoint<IpAddressV6> endpoint)
     {
         if (OperatingSystem.IsWindows())
             return Windows.WindowsTcpClientV6.Connect(endpoint);

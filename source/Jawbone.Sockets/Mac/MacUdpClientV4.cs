@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Jawbone.Sockets.Mac;
 
-sealed class MacUdpClientV4 : IUdpClient<AddressV4>
+sealed class MacUdpClientV4 : IUdpClient<IpAddressV4>
 {
     private readonly int _fd;
     private SockAddrStorage _address;
@@ -11,9 +11,9 @@ sealed class MacUdpClientV4 : IUdpClient<AddressV4>
     public InterruptHandling HandleInterruptOnSend { get; set; }
     public InterruptHandling HandleInterruptOnReceive { get; set; }
 
-    public Endpoint<AddressV4> Origin { get; }
+    public IpEndpoint<IpAddressV4> Origin { get; }
 
-    public MacUdpClientV4(int fd, Endpoint<AddressV4> origin)
+    public MacUdpClientV4(int fd, IpEndpoint<IpAddressV4> origin)
     {
         _fd = fd;
         Origin = origin;
@@ -26,7 +26,7 @@ sealed class MacUdpClientV4 : IUdpClient<AddressV4>
             Sys.Throw(ExceptionMessages.CloseSocket);
     }
 
-    public Endpoint<AddressV4> GetSocketName()
+    public IpEndpoint<IpAddressV4> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
         var result = Sys.GetSockName(_fd, out _address, ref addressLength);
@@ -122,7 +122,7 @@ sealed class MacUdpClientV4 : IUdpClient<AddressV4>
         return new((int)result);
     }
 
-    public static MacUdpClientV4 Connect(Endpoint<AddressV4> endpoint)
+    public static MacUdpClientV4 Connect(IpEndpoint<IpAddressV4> endpoint)
     {
         var fd = CreateSocket();
 

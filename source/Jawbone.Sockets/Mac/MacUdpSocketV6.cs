@@ -2,7 +2,7 @@ using System;
 
 namespace Jawbone.Sockets.Mac;
 
-sealed class MacUdpSocketV6 : IUdpSocket<AddressV6>
+sealed class MacUdpSocketV6 : IUdpSocket<IpAddressV6>
 {
     private readonly int _fd;
     private SockAddrStorage _address;
@@ -22,7 +22,7 @@ sealed class MacUdpSocketV6 : IUdpSocket<AddressV6>
             Sys.Throw(ExceptionMessages.CloseSocket);
     }
 
-    public unsafe TransferResult Send(ReadOnlySpan<byte> message, Endpoint<AddressV6> destination)
+    public unsafe TransferResult Send(ReadOnlySpan<byte> message, IpEndpoint<IpAddressV6> destination)
     {
         var sa = SockAddrIn6.FromEndpoint(destination);
 
@@ -51,7 +51,7 @@ sealed class MacUdpSocketV6 : IUdpSocket<AddressV6>
     public unsafe TransferResult Receive(
         Span<byte> buffer,
         int timeoutInMilliseconds,
-        out Endpoint<AddressV6> origin)
+        out IpEndpoint<IpAddressV6> origin)
     {
         var milliseconds = int.Max(0, timeoutInMilliseconds);
         var pfd = new PollFd { Fd = _fd, Events = Poll.In };
@@ -120,7 +120,7 @@ sealed class MacUdpSocketV6 : IUdpSocket<AddressV6>
         return new(SocketResult.Timeout);
     }
 
-    public unsafe Endpoint<AddressV6> GetSocketName()
+    public unsafe IpEndpoint<IpAddressV6> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
         var result = Sys.GetSockName(_fd, out _address, ref addressLength);
@@ -135,7 +135,7 @@ sealed class MacUdpSocketV6 : IUdpSocket<AddressV6>
         return new MacUdpSocketV6(fd);
     }
 
-    public static MacUdpSocketV6 Bind(Endpoint<AddressV6> endpoint, bool allowV4)
+    public static MacUdpSocketV6 Bind(IpEndpoint<IpAddressV6> endpoint, bool allowV4)
     {
         var fd = CreateSocket(allowV4);
 

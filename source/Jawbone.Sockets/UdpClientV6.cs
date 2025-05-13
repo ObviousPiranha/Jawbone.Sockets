@@ -4,7 +4,7 @@ namespace Jawbone.Sockets;
 
 public static class UdpClientV6
 {
-    public static IUdpClient<AddressV6> Connect(Endpoint<AddressV6> endpoint)
+    public static IUdpClient<IpAddressV6> Connect(IpEndpoint<IpAddressV6> endpoint)
     {
         if (OperatingSystem.IsWindows())
             return Windows.WindowsUdpClientV6.Connect(endpoint);

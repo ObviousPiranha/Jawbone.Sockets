@@ -14,8 +14,8 @@ public class UdpBenchmark : IDisposable
     private readonly System.Net.Sockets.Socket _oldSocketA;
     private readonly System.Net.Sockets.Socket _oldSocketB;
 
-    private readonly IUdpSocket<AddressV4> _newUdpSocket;
-    private readonly IUdpClient<AddressV4> _newUdpClient;
+    private readonly IUdpSocket<IpAddressV4> _newUdpSocket;
+    private readonly IUdpClient<IpAddressV4> _newUdpClient;
 
     private readonly byte[] _outBuffer = new byte[256];
     private readonly byte[] _inBuffer = new byte[512];
@@ -42,7 +42,7 @@ public class UdpBenchmark : IDisposable
 
         _newUdpSocket = UdpSocketV4.BindLocalIp();
         var endpoint = _newUdpSocket.GetSocketName();
-        _newUdpClient = UdpClientV4.Connect(AddressV4.Local.OnPort(endpoint.Port));
+        _newUdpClient = UdpClientV4.Connect(IpAddressV4.Local.OnPort(endpoint.Port));
     }
 
     public void Dispose()

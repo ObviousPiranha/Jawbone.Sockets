@@ -67,7 +67,7 @@ public static class StringBuilderExtensions
 
     public static StringBuilder AppendAddress<TAddress>(
         this StringBuilder builder,
-        TAddress address) where TAddress : unmanaged, IAddress<TAddress>
+        TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
     {
         address.AppendTo(builder);
         return builder;
@@ -75,7 +75,7 @@ public static class StringBuilderExtensions
 
     public static StringBuilder AppendEndpoint<TAddress>(
         this StringBuilder builder,
-        Endpoint<TAddress> endpoint) where TAddress : unmanaged, IAddress<TAddress>
+        IpEndpoint<TAddress> endpoint) where TAddress : unmanaged, IIpAddress<TAddress>
     {
         return builder
             .Append('[')

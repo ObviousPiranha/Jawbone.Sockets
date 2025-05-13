@@ -2,17 +2,17 @@ using System;
 
 namespace Jawbone.Sockets.Mac;
 
-sealed class MacTcpClientV4 : ITcpClient<AddressV4>
+sealed class MacTcpClientV4 : ITcpClient<IpAddressV4>
 {
     private readonly int _fd;
 
-    public Endpoint<AddressV4> Origin { get; }
+    public IpEndpoint<IpAddressV4> Origin { get; }
 
     public InterruptHandling HandleInterruptOnSend { get; set; }
     public InterruptHandling HandleInterruptOnReceive { get; set; }
     public bool HungUp { get; private set; }
 
-    public MacTcpClientV4(int fd, Endpoint<AddressV4> origin)
+    public MacTcpClientV4(int fd, IpEndpoint<IpAddressV4> origin)
     {
         _fd = fd;
         Origin = origin;
@@ -112,7 +112,7 @@ sealed class MacTcpClientV4 : ITcpClient<AddressV4>
         return new((int)writeResult);
     }
 
-    public Endpoint<AddressV4> GetSocketName()
+    public IpEndpoint<IpAddressV4> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
         var result = Sys.GetSockName(_fd, out var address, ref addressLength);
@@ -121,7 +121,7 @@ sealed class MacTcpClientV4 : ITcpClient<AddressV4>
         return address.GetV4(addressLength);
     }
 
-    public static MacTcpClientV4 Connect(Endpoint<AddressV4> endpoint)
+    public static MacTcpClientV4 Connect(IpEndpoint<IpAddressV4> endpoint)
     {
         int fd = Sys.Socket(Af.INet, Sock.Stream, 0);
 

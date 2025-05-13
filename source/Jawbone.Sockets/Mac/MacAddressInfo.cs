@@ -17,8 +17,8 @@ static class MacAddressInfo
         if (result == -1)
             Sys.Throw("Unable to get address info.");
 
-        var v4 = ImmutableArray.CreateBuilder<Endpoint<AddressV4>>();
-        var v6 = ImmutableArray.CreateBuilder<Endpoint<AddressV6>>();
+        var v4 = ImmutableArray.CreateBuilder<IpEndpoint<IpAddressV4>>();
+        var v6 = ImmutableArray.CreateBuilder<IpEndpoint<IpAddressV6>>();
 
         try
         {

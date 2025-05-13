@@ -2,17 +2,17 @@ using System;
 
 namespace Jawbone.Sockets.Mac;
 
-sealed class MacTcpClientV6 : ITcpClient<AddressV6>
+sealed class MacTcpClientV6 : ITcpClient<IpAddressV6>
 {
     private readonly int _fd;
 
-    public Endpoint<AddressV6> Origin { get; }
+    public IpEndpoint<IpAddressV6> Origin { get; }
 
     public InterruptHandling HandleInterruptOnSend { get; set; }
     public InterruptHandling HandleInterruptOnReceive { get; set; }
     public bool HungUp { get; private set; }
 
-    public MacTcpClientV6(int fd, Endpoint<AddressV6> origin)
+    public MacTcpClientV6(int fd, IpEndpoint<IpAddressV6> origin)
     {
         _fd = fd;
         Origin = origin;
@@ -114,7 +114,7 @@ sealed class MacTcpClientV6 : ITcpClient<AddressV6>
         return new((int)writeResult);
     }
 
-    public Endpoint<AddressV6> GetSocketName()
+    public IpEndpoint<IpAddressV6> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
         var result = Sys.GetSockName(_fd, out var address, ref addressLength);
@@ -123,7 +123,7 @@ sealed class MacTcpClientV6 : ITcpClient<AddressV6>
         return address.GetV6(addressLength);
     }
 
-    public static MacTcpClientV6 Connect(Endpoint<AddressV6> endpoint)
+    public static MacTcpClientV6 Connect(IpEndpoint<IpAddressV6> endpoint)
     {
         int fd = Sys.Socket(Af.INet6, Sock.Stream, 0);
 

@@ -5,13 +5,13 @@ namespace Jawbone.Sockets;
 public static class UdpSocketV6
 {
 
-    public static IUdpSocket<AddressV6> BindAnyIp(int port, bool allowV4 = false) => BindAnyIp((NetworkPort)port, allowV4);
-    public static IUdpSocket<AddressV6> BindAnyIp(NetworkPort port, bool allowV4 = false) => Bind(new(default, port), allowV4);
-    public static IUdpSocket<AddressV6> BindAnyIp(bool allowV4 = false) => Bind(default, allowV4);
-    public static IUdpSocket<AddressV6> BindLocalIp(int port, bool allowV4 = false) => Bind(new(AddressV6.Local, (NetworkPort)port), allowV4);
-    public static IUdpSocket<AddressV6> BindLocalIp(NetworkPort port, bool allowV4 = false) => Bind(new(AddressV6.Local, port), allowV4);
-    public static IUdpSocket<AddressV6> BindLocalIp(bool allowV4 = false) => Bind(new(AddressV6.Local, default(NetworkPort)), allowV4);
-    public static IUdpSocket<AddressV6> Bind(Endpoint<AddressV6> endpoint, bool allowV4 = false)
+    public static IUdpSocket<IpAddressV6> BindAnyIp(int port, bool allowV4 = false) => BindAnyIp((NetworkPort)port, allowV4);
+    public static IUdpSocket<IpAddressV6> BindAnyIp(NetworkPort port, bool allowV4 = false) => Bind(new(default, port), allowV4);
+    public static IUdpSocket<IpAddressV6> BindAnyIp(bool allowV4 = false) => Bind(default, allowV4);
+    public static IUdpSocket<IpAddressV6> BindLocalIp(int port, bool allowV4 = false) => Bind(new(IpAddressV6.Local, (NetworkPort)port), allowV4);
+    public static IUdpSocket<IpAddressV6> BindLocalIp(NetworkPort port, bool allowV4 = false) => Bind(new(IpAddressV6.Local, port), allowV4);
+    public static IUdpSocket<IpAddressV6> BindLocalIp(bool allowV4 = false) => Bind(new(IpAddressV6.Local, default(NetworkPort)), allowV4);
+    public static IUdpSocket<IpAddressV6> Bind(IpEndpoint<IpAddressV6> endpoint, bool allowV4 = false)
     {
         if (OperatingSystem.IsWindows())
         {
@@ -31,7 +31,8 @@ public static class UdpSocketV6
         }
     }
 
-    public static IUdpSocket<AddressV6> Create(bool allowV4 = false)
+    // TODO: Remove.
+    private static IUdpSocket<IpAddressV6> Create(bool allowV4 = false)
     {
         // https://stackoverflow.com/a/17922652
         if (OperatingSystem.IsWindows())

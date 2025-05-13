@@ -23,21 +23,19 @@ public class UdpTest
 
         using var socketA = UdpSocketV4.BindLocalIp();
         var endpointA = socketA.GetSocketName();
-        using var socketB = UdpSocketV4.Create();
-        socketB.Send(sendBuffer, AddressV4.Local.OnPort(endpointA.Port));
+        using var socketB = UdpClientV4.Connect(endpointA);
+        socketB.Send(sendBuffer);
         var endpointB = socketB.GetSocketName();
 
         var resultA = socketA.Receive(receiveBuffer, Timeout, out var originA);
         Assert.Equal(endpointB.Port, originA.Port);
-        Assert.Equal(AddressV4.Local, originA.Address);
+        Assert.Equal(IpAddressV4.Local, originA.Address);
         Assert.Equal(SocketResult.Success, resultA.Result);
         Assert.Equal(sendBuffer.Length, resultA.Count);
         Assert.Equal(receiveBuffer.AsSpan(0, resultA.Count), sendBuffer.AsSpan());
 
-        socketA.Send(sendBuffer, AddressV4.Local.OnPort(endpointB.Port));
-        var resultB = socketB.Receive(receiveBuffer, Timeout, out var originB);
-        Assert.Equal(endpointA.Port, originB.Port);
-        Assert.Equal(AddressV4.Local, originB.Address);
+        socketA.Send(sendBuffer, IpAddressV4.Local.OnPort(endpointB.Port));
+        var resultB = socketB.Receive(receiveBuffer, Timeout);
         Assert.Equal(SocketResult.Success, resultB.Result);
         Assert.Equal(sendBuffer.Length, resultB.Count);
         Assert.Equal(receiveBuffer.AsSpan(0, resultB.Count), sendBuffer.AsSpan());
@@ -54,21 +52,19 @@ public class UdpTest
 
         using var socketA = UdpSocketV6.BindLocalIp();
         var endpointA = socketA.GetSocketName();
-        using var socketB = UdpSocketV6.Create();
-        socketB.Send(sendBuffer, AddressV6.Local.OnPort(endpointA.Port));
+        using var socketB = UdpClientV6.Connect(endpointA);
+        socketB.Send(sendBuffer);
         var endpointB = socketB.GetSocketName();
 
         var resultA = socketA.Receive(receiveBuffer, Timeout, out var originA);
         Assert.Equal(endpointB.Port, originA.Port);
-        Assert.Equal(AddressV6.Local, originA.Address);
+        Assert.Equal(IpAddressV6.Local, originA.Address);
         Assert.Equal(SocketResult.Success, resultA.Result);
         Assert.Equal(sendBuffer.Length, resultA.Count);
         Assert.Equal(receiveBuffer.AsSpan(0, resultA.Count), sendBuffer.AsSpan());
 
-        socketA.Send(sendBuffer, AddressV6.Local.OnPort(endpointB.Port));
-        var resultB = socketB.Receive(receiveBuffer, Timeout, out var originB);
-        Assert.Equal(endpointA.Port, originB.Port);
-        Assert.Equal(AddressV6.Local, originB.Address);
+        socketA.Send(sendBuffer, IpAddressV6.Local.OnPort(endpointB.Port));
+        var resultB = socketB.Receive(receiveBuffer, Timeout);
         Assert.Equal(SocketResult.Success, resultB.Result);
         Assert.Equal(sendBuffer.Length, resultB.Count);
         Assert.Equal(receiveBuffer.AsSpan(0, resultB.Count), sendBuffer.AsSpan());
@@ -77,20 +73,20 @@ public class UdpTest
     [Fact]
     public void CanSendUdpV4ToV6WhenAllowed()
     {
-        var v4LocalAsV6 = (AddressV6)AddressV4.Local;
+        var v4LocalAsV6 = (IpAddressV6)IpAddressV4.Local;
         var sendBuffer = new byte[256];
         sendBuffer.AsSpan().Fill(0xab);
 
         // Ensure that the amount received doesn't match by luck.
         var receiveBuffer = new byte[sendBuffer.Length * 2];
 
-        using var socketA = UdpSocketV4.Create();
 
         using var socketB = UdpSocketV6.Bind(v4LocalAsV6.OnAnyPort(), true);
         var endpointB = socketB.GetSocketName();
-        var destinationB = AddressV4.Local.OnPort(endpointB.Port);
+        var destinationB = IpAddressV4.Local.OnPort(endpointB.Port);
 
-        socketA.Send(sendBuffer, destinationB);
+        using var socketA = UdpClientV4.Connect(destinationB);
+        socketA.Send(sendBuffer);
         var endpointA = socketA.GetSocketName();
         var destinationA = v4LocalAsV6.OnPort(endpointA.Port);
         var resultV6 = socketB.Receive(receiveBuffer, Timeout, out var originV6);
@@ -106,8 +102,7 @@ public class UdpTest
         Assert.False(receiveBuffer.AsSpan(0, resultV6.Count).SequenceEqual(sendBuffer));
 
         socketB.Send(sendBuffer, destinationA);
-        var resultV4 = socketA.Receive(receiveBuffer, Timeout, out var originV4);
-        Assert.Equal(AddressV4.Local, originV4.Address);
+        var resultV4 = socketA.Receive(receiveBuffer, Timeout);
         Assert.Equal(SocketResult.Success, resultV4.Result);
         Assert.Equal(sendBuffer.Length, resultV4.Count);
         Assert.Equal(receiveBuffer.AsSpan(0, resultV4.Count), sendBuffer.AsSpan());
@@ -122,12 +117,12 @@ public class UdpTest
         // Ensure that the amount received doesn't match by luck.
         var receiveBuffer = new byte[sendBuffer.Length * 2];
 
-        using var socketA = UdpSocketV4.Create();
         using var socketB = UdpSocketV6.BindLocalIp();
         var endpointB = socketB.GetSocketName();
-        var destinationB = AddressV4.Local.OnPort(endpointB.Port);
+        var destinationB = IpAddressV4.Local.OnPort(endpointB.Port);
 
-        socketA.Send(sendBuffer, destinationB);
+        using var socketA = UdpClientV4.Connect(destinationB);
+        socketA.Send(sendBuffer);
         var result = socketB.Receive(receiveBuffer, Timeout, out var origin);
         Assert.Equal(SocketResult.Timeout, result.Result);
     }
@@ -193,7 +188,7 @@ public class UdpTest
     public void CannotBindSamePortOnV4AndV6InDualMode()
     {
         Assert.Skip("Debating whether to reuse addr by default.");
-        var target = ((AddressV6)AddressV4.Local).OnAnyPort();
+        var target = ((IpAddressV6)IpAddressV4.Local).OnAnyPort();
         for (int i = 0; i < 3; ++i)
         {
             using var v6 = UdpSocketV6.Bind(target, allowV4: true);

@@ -8,8 +8,8 @@ public readonly struct AddressInfo
     public DateTimeOffset CreatedAt { get; init; }
     public readonly string? Node { get; init; }
     public readonly string? Service { get; init; }
-    public readonly ImmutableArray<Endpoint<AddressV4>> V4 { get; init; }
-    public readonly ImmutableArray<Endpoint<AddressV6>> V6 { get; init; }
+    public readonly ImmutableArray<IpEndpoint<IpAddressV4>> V4 { get; init; }
+    public readonly ImmutableArray<IpEndpoint<IpAddressV6>> V6 { get; init; }
 
     public readonly bool IsEmpty => V4.IsDefaultOrEmpty && V6.IsDefaultOrEmpty;
 

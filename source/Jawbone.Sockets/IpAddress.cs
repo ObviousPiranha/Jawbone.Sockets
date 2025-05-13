@@ -6,17 +6,17 @@ public readonly struct IpAddress : IEquatable<IpAddress>
 {
     private readonly IpAddressV6 _storage;
 
-    public readonly AddressType Type { get; }
+    public readonly IpAddressType Type { get; }
 
     public IpAddress(IpAddressV4 address)
     {
-        Type = AddressType.V4;
+        Type = IpAddressType.V4;
         _storage.DataU32[0] = address.DataU32;
     }
 
     public IpAddress(IpAddressV6 address)
     {
-        Type = AddressType.V6;
+        Type = IpAddressType.V6;
         _storage = address;
     }
 
@@ -29,8 +29,8 @@ public readonly struct IpAddress : IEquatable<IpAddress>
     {
         return Type switch
         {
-            AddressType.V4 => AsV4().GetHashCode(),
-            AddressType.V6 => AsV6().GetHashCode(),
+            IpAddressType.V4 => AsV4().GetHashCode(),
+            IpAddressType.V6 => AsV6().GetHashCode(),
             _ => 0
         };
     }
@@ -39,8 +39,8 @@ public readonly struct IpAddress : IEquatable<IpAddress>
     {
         return Type switch
         {
-            AddressType.V4 => AsV4().ToString(),
-            AddressType.V6 => AsV6().ToString(),
+            IpAddressType.V4 => AsV4().ToString(),
+            IpAddressType.V6 => AsV6().ToString(),
             _ => null
         };
     }
@@ -49,15 +49,15 @@ public readonly struct IpAddress : IEquatable<IpAddress>
     {
         return Type == other.Type && Type switch
         {
-            AddressType.V4 => AsV4().Equals(other.AsV4()),
-            AddressType.V6 => AsV6().Equals(other.AsV6()),
+            IpAddressType.V4 => AsV4().Equals(other.AsV4()),
+            IpAddressType.V6 => AsV6().Equals(other.AsV6()),
             _ => true
         };
     }
 
     public static explicit operator IpAddressV4(IpAddress address)
     {
-        if (address.Type != AddressType.V4)
+        if (address.Type != IpAddressType.V4)
             throw new InvalidCastException();
 
         return address.AsV4();
@@ -65,7 +65,7 @@ public readonly struct IpAddress : IEquatable<IpAddress>
 
     public static explicit operator IpAddressV6(IpAddress address)
     {
-        if (address.Type != AddressType.V6)
+        if (address.Type != IpAddressType.V6)
             throw new InvalidCastException();
 
         return address.AsV6();

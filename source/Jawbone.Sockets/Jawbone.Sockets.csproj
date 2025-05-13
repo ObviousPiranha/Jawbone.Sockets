@@ -9,8 +9,8 @@
     <RepositoryUrl>https://github.com/ObviousPiranha/Jawbone.Sockets</RepositoryUrl>
     <Authors>Kelly Brown</Authors>
     <Company>Obvious Piranha LLC</Company>
-    <Version>0.0.1</Version>
-    <PackageVersion>0.0.1</PackageVersion>
+    <Version>0.0.2</Version>
+    <PackageVersion>$(Version)</PackageVersion>
     <Title>Jawbone Sockets</Title>
     <Summary>High performance low allocation sockets</Summary>
     <Description>High performance low allocation sockets</Description>

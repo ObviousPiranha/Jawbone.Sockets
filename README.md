@@ -2,7 +2,7 @@
 
 UDP and TCP socket library for game engines!
 
-Version 0.0.1 available on [NuGet](https://www.nuget.org/packages/Jawbone.Sockets/).
+Version 0.0.2 available on [NuGet](https://www.nuget.org/packages/Jawbone.Sockets/).
 
 The [TLDR](rant.md) is that the .NET socket libraries allocate way too much and support too many address families. This library focuses on the essentials.
 

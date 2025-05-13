@@ -1,6 +1,6 @@
 namespace Jawbone.Sockets;
 
-public enum AddressType
+public enum IpAddressType
 {
     None,
     V4,

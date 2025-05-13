@@ -1,6 +1,6 @@
 namespace Jawbone.Sockets;
 
-public static class AddressExtensions
+public static class IpAddressExtensions
 {
     public static IpEndpoint<TAddress> OnAnyPort<TAddress>(
         this TAddress address

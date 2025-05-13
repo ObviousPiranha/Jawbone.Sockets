@@ -57,7 +57,7 @@ sealed class LinuxTcpClientV4 : ITcpClient<AddressV4>
                 {
                     var errNo = Sys.ErrNo();
                     if (!Error.IsInterrupt(errNo) || HandleInterruptOnReceive == InterruptHandling.Error)
-                        Sys.Throw(ExceptionMessages.ReceiveData);
+                        Sys.Throw(errNo, ExceptionMessages.ReceiveData);
                     if (HandleInterruptOnReceive == InterruptHandling.Abort)
                         return new(SocketResult.Interrupt);
                     goto retryReceive;

@@ -8,4 +8,8 @@
     <PackageReference Include="BenchmarkDotNet" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Jawbone.Sockets\Jawbone.Sockets.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -56,7 +56,7 @@ sealed class WindowsTcpClientV4 : ITcpClient<AddressV4>
                 {
                     var error = Sys.WsaGetLastError();
                     if (!Error.IsInterrupt(error) || HandleInterruptOnReceive == InterruptHandling.Error)
-                        Sys.Throw(ExceptionMessages.ReceiveData);
+                        Sys.Throw(error, ExceptionMessages.ReceiveData);
                     if (HandleInterruptOnReceive == InterruptHandling.Abort)
                         return new(SocketResult.Interrupt);
                     goto retryReceive;

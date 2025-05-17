@@ -23,6 +23,11 @@ public struct IpEndpoint : IEquatable<IpEndpoint>
     public readonly override bool Equals(object? obj) => obj is IpEndpoint other && Equals(other);
     public readonly override int GetHashCode() => HashCode.Combine(Address, Port);
 
+    public readonly override string ToString() => $"[{Address}]:{Port}";
+
+    internal readonly IpEndpoint<IpAddressV4> AsV4() => Address.AsV4().OnPort(Port);
+    internal readonly IpEndpoint<IpAddressV6> AsV6() => Address.AsV6().OnPort(Port);
+
     public static bool operator ==(IpEndpoint a, IpEndpoint b) => a.Equals(b);
     public static bool operator !=(IpEndpoint a, IpEndpoint b) => !a.Equals(b);
     public static implicit operator IpEndpoint(IpEndpoint<IpAddressV4> endpoint) => new(endpoint.Address, endpoint.Port);

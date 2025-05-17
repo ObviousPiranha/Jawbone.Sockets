@@ -11,4 +11,5 @@ static class ExceptionMessages
     public const string GetSocketName = "Unable to get socket name.";
     public const string Accept = "Unable to accept socket.";
     public const string TcpNoDelay = "Unable to enable TCP_NODELAY.";
+    public const string Dns = "Unable to get address info.";
 }

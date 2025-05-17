@@ -12,7 +12,7 @@ file static class Extensions
     }
 }
 
-public class AddressTest
+public class IpAddressTest
 {
     [Fact]
     public void AddressInvariants()

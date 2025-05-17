@@ -37,6 +37,10 @@ var host = new IpAddressV4(10, 0, 0, 23);
 IpEndpoint<IpAddressV4> endpoint = host.OnPort(5000);
 ```
 
+### DNS Queries
+
+
+
 ### UDP Sockets
 
 Now you're ready to make a socket! All socket types are generic as they are _constrained_ to IPv4 or IPv6.

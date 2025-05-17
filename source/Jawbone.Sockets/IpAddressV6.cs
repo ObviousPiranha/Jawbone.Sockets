@@ -286,34 +286,39 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
             if (s.IsEmpty)
                 return true;
 
-            if (!TryParseHexBlock(s, out var block))
+            var index = ParseHexBlock(s, out var block);
+            if (index == 0)
                 return false;
 
             blocks[0] = block;
             blocksWritten = 1;
-            var index = HexLength(block);
 
             while (blocksWritten < blocks.Length)
             {
                 if (index == s.Length)
                     return true;
 
-                if (s[index] != ':' || !TryParseHexBlock(s[++index..], out block))
+                if (s[index] != ':')
+                    return false;
+
+                var length = ParseHexBlock(s[++index..], out block);
+
+                if (length == 0)
                     return false;
 
                 blocks[blocksWritten++] = block;
-                index += HexLength(block);
+                index += length;
             }
 
             return index == s.Length;
         }
 
-        static bool TryParseHexBlock(ReadOnlySpan<char> s, out ushort u16)
+        static int ParseHexBlock(ReadOnlySpan<char> s, out ushort u16)
         {
             if (s.IsEmpty)
             {
                 u16 = default;
-                return false;
+                return 0;
             }
 
             int result = HexDigit(s[0]);
@@ -321,7 +326,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
             if (result == -1)
             {
                 u16 = default;
-                return false;
+                return 0;
             }
 
             int digitCount = 1;
@@ -336,14 +341,14 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
                 if (4 < ++digitCount)
                 {
                     u16 = default;
-                    return false;
+                    return 0;
                 }
 
                 result = (result << 4) | nextDigit;
             }
 
             u16 = (ushort)result;
-            return true;
+            return digitCount;
         }
 
         static int HexDigit(int c)
@@ -357,8 +362,6 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
 
             return -1;
         }
-
-        static int HexLength(int n) => 0xfff < n ? 4 : 0xff < n ? 3 : 0xf < n ? 2 : 1;
     }
 
     public static IpAddressV6 Parse(ReadOnlySpan<char> s, IFormatProvider? provider)

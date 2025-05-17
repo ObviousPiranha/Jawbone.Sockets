@@ -18,12 +18,28 @@ public readonly struct AddressInfo
         string? service = null,
         TimeProvider? timeProvider = null)
     {
-        if (OperatingSystem.IsWindows())
-            return Windows.WindowsAddressInfo.Get(node, service, timeProvider);
-        if (OperatingSystem.IsMacOS())
-            return Mac.MacAddressInfo.Get(node, service, timeProvider);
-        if (OperatingSystem.IsLinux())
-            return Linux.LinuxAddressInfo.Get(node, service, timeProvider);
-        throw new PlatformNotSupportedException();
+        var v4 = ImmutableArray.CreateBuilder<IpEndpoint<IpAddressV4>>();
+        var v6 = ImmutableArray.CreateBuilder<IpEndpoint<IpAddressV6>>();
+
+        foreach (var endpoint in Dns.Query(node, service))
+        {
+            if (endpoint.Address.Version == IpAddressVersion.V4)
+                v4.Add(endpoint.AsV4());
+            else if (endpoint.Address.Version == IpAddressVersion.V6)
+                v6.Add(endpoint.AsV6());
+        }
+
+        timeProvider ??= TimeProvider.System;
+
+        var result = new AddressInfo
+        {
+            CreatedAt = timeProvider.GetLocalNow(),
+            Node = node,
+            Service = service,
+            V4 = v4.DrainToImmutable(),
+            V6 = v6.DrainToImmutable()
+        };
+
+        return result;
     }
 }

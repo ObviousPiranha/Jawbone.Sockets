@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "Jawbone.Sockets.Samples"
+		},
+		{
+			"path": "Jawbone.Sockets.Sandbox"
 		}
 	],
 	"settings": {}

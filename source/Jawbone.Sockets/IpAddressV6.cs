@@ -129,6 +129,11 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         return builder.ToString();
     }
 
+    public readonly int Format(Span<char> utf16)
+    {
+        var writer = SpanWriter.Create(utf16);
+    }
+
     public readonly void AppendTo(StringBuilder builder)
     {
         if (IsV4Mapped)

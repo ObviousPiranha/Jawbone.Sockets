@@ -34,7 +34,7 @@ var endpointV4 = new IpEndpoint<IpAddressV4>(IpAddressV4.Local, 5000);
 var endpointV6 = new IpEndpoint<IpAddressV6>(IpAddressV6.Local, 5000);
 
 // Lots more shortcuts.
-IpEndpoint<IpAddressV4> origin = Endpoint.Create(IpAddressV4.Local, 5000);
+IpEndpoint<IpAddressV4> origin = IpEndpoint.Create(IpAddressV4.Local, 5000);
 
 // Or you can use some extensions.
 var host = new IpAddressV4(10, 0, 0, 23);

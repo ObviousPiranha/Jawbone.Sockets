@@ -9,7 +9,7 @@
     <RepositoryUrl>https://github.com/ObviousPiranha/Jawbone.Sockets</RepositoryUrl>
     <Authors>Kelly Brown</Authors>
     <Company>Obvious Piranha LLC</Company>
-    <Version>0.0.2</Version>
+    <Version>0.0.3</Version>
     <PackageVersion>$(Version)</PackageVersion>
     <Title>Jawbone Sockets</Title>
     <Summary>High performance low allocation sockets</Summary>

@@ -41,6 +41,42 @@ var host = new IpAddressV4(10, 0, 0, 23);
 IpEndpoint<IpAddressV4> endpoint = host.OnPort(5000);
 ```
 
+### DNS Queries
+
+If you need to discover a host address, you have several options.
+
+```csharp
+// Iterate through each response using the non-generic IpEndpoint.
+foreach (IpEndpoint endpoint in Dns.Query("github.com"))
+{
+    if (endpoint.Address.Version == IpAddressVersion.V4)
+    {
+        // Handle IPv4.
+        var ep4 = (IpEndpoint<IpAddressV4>)endpoint;
+    }
+
+    if (endpoint.Address.Version == IpAddressVersion.V6)
+    {
+        // Handle IPv6.
+        var ep6 = (IpEndpoint<IpAddressV6>)endpoint;
+    }
+}
+
+foreach (IpEndpoint<IpAddressV4> endpoint in Dns.QueryV4("github.com"))
+{
+    // Handle just the IPv4 entries.
+}
+
+// Or use a shortcut to just grab the first address (without a port).
+IpAddressV4 address = Dns.GetAddressV4("github.com");
+
+// Use a safer method to avoid exceptions.
+if (Dns.TryGetAddressV4("github.com", out IpAddressV4 addr))
+{
+    // ...
+}
+```
+
 ### UDP Sockets
 
 Now you're ready to make a socket! All socket types are generic as they are _constrained_ to IPv4 or IPv6.

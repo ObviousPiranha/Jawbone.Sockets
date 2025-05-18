@@ -23,7 +23,34 @@ public struct IpEndpoint : IEquatable<IpEndpoint>
     public readonly override bool Equals(object? obj) => obj is IpEndpoint other && Equals(other);
     public readonly override int GetHashCode() => HashCode.Combine(Address, Port);
 
-    public readonly override string ToString() => $"[{Address}]:{Port}";
+    public readonly override string ToString()
+    {
+        Span<char> buffer = stackalloc char[64];
+        var n = FormatUtf16(buffer);
+        return buffer[..n].ToString();
+    }
+
+    public readonly int FormatUtf16(Span<char> utf16)
+    {
+        var writer = SpanWriter.Create(utf16);
+        writer.Write('[');
+        writer.WriteIpAddress(Address);
+        writer.Write(']');
+        writer.Write(':');
+        writer.WriteBase10(Port.HostValue);
+        return writer.Position;
+    }
+
+    public readonly int FormatUtf8(Span<byte> utf16)
+    {
+        var writer = SpanWriter.Create(utf16);
+        writer.Write((byte)'[');
+        writer.WriteIpAddress(Address);
+        writer.Write((byte)']');
+        writer.Write((byte)':');
+        writer.WriteBase10(Port.HostValue);
+        return writer.Position;
+    }
 
     internal readonly IpEndpoint<IpAddressV4> AsV4() => Address.AsV4().OnPort(Port);
     internal readonly IpEndpoint<IpAddressV6> AsV6() => Address.AsV6().OnPort(Port);
@@ -79,14 +106,36 @@ public struct IpEndpoint<TAddress> : IEquatable<IpEndpoint<TAddress>>
     {
     }
 
+    public readonly int FormatUtf16(Span<char> utf16)
+    {
+        var writer = SpanWriter.Create(utf16);
+        writer.Write('[');
+        writer.WriteIpAddress(Address);
+        writer.Write(']');
+        writer.Write(':');
+        writer.WriteBase10(Port.HostValue);
+        return writer.Position;
+    }
+
+    public readonly int FormatUtf8(Span<byte> utf8)
+    {
+        var writer = SpanWriter.Create(utf8);
+        writer.Write((byte)'[');
+        writer.WriteIpAddress(Address);
+        writer.Write((byte)']');
+        writer.Write((byte)':');
+        writer.WriteBase10(Port.HostValue);
+        return writer.Position;
+    }
+
     public readonly bool Equals(IpEndpoint<TAddress> other) => Address.Equals(other.Address) && Port.Equals(other.Port);
     public override readonly bool Equals(object? obj) => obj is IpEndpoint<TAddress> other && Equals(other);
     public override readonly int GetHashCode() => HashCode.Combine(Address, Port);
     public override readonly string ToString()
     {
-        var builder = new StringBuilder();
-        builder.AppendEndpoint(this);
-        return builder.ToString();
+        Span<char> buffer = stackalloc char[64];
+        var n = FormatUtf16(buffer);
+        return buffer[..n].ToString();
     }
 
     public static bool operator ==(IpEndpoint<TAddress> a, IpEndpoint<TAddress> b) => a.Equals(b);

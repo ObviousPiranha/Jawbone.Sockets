@@ -48,11 +48,42 @@ static class SpanWriter
         writer.Position += charsWritten;
     }
 
+    public static void WriteBase10(ref this SpanWriter<byte> writer, uint value)
+    {
+        if (!value.TryFormat(writer.Free, out var charsWritten))
+            throw new InvalidOperationException("Not enough room to write value into span.");
+        writer.Position += charsWritten;
+    }
+
+    public static void WriteIpAddress(
+        ref this SpanWriter<char> writer,
+        IpAddress address)
+    {
+        var n = address.FormatUtf16(writer.Free);
+        writer.Position += n;
+    }
+
+    public static void WriteIpAddress(
+        ref this SpanWriter<byte> writer,
+        IpAddress address)
+    {
+        var n = address.FormatUtf8(writer.Free);
+        writer.Position += n;
+    }
+
     public static void WriteIpAddress<TAddress>(
         ref this SpanWriter<char> writer,
         TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
     {
-        var n = address.Format(writer.Free);
+        var n = address.FormatUtf16(writer.Free);
+        writer.Position += n;
+    }
+
+    public static void WriteIpAddress<TAddress>(
+        ref this SpanWriter<byte> writer,
+        TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
+    {
+        var n = address.FormatUtf8(writer.Free);
         writer.Position += n;
     }
 }

@@ -76,11 +76,11 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
     public override readonly string ToString()
     {
         Span<char> buffer = stackalloc char[16];
-        var n = Format(buffer);
+        var n = FormatUtf16(buffer);
         return buffer[..n].ToString();
     }
 
-    public readonly int Format(Span<char> utf16)
+    public readonly int FormatUtf16(Span<char> utf16)
     {
         var writer = SpanWriter.Create(utf16);
         writer.WriteBase10(DataU8[0]);
@@ -89,6 +89,19 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
         writer.Write('.');
         writer.WriteBase10(DataU8[2]);
         writer.Write('.');
+        writer.WriteBase10(DataU8[3]);
+        return writer.Position;
+    }
+
+    public readonly int FormatUtf8(Span<byte> utf8)
+    {
+        var writer = SpanWriter.Create(utf8);
+        writer.WriteBase10(DataU8[0]);
+        writer.Write((byte)'.');
+        writer.WriteBase10(DataU8[1]);
+        writer.Write((byte)'.');
+        writer.WriteBase10(DataU8[2]);
+        writer.Write((byte)'.');
         writer.WriteBase10(DataU8[3]);
         return writer.Position;
     }

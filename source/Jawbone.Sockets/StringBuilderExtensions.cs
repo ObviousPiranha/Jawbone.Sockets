@@ -69,8 +69,9 @@ public static class StringBuilderExtensions
         this StringBuilder builder,
         TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
     {
-        address.AppendTo(builder);
-        return builder;
+        Span<char> buffer = stackalloc char[64];
+        var n = address.Format(buffer);
+        return builder.Append(buffer[..n]);
     }
 
     public static StringBuilder AppendEndpoint<TAddress>(

@@ -41,8 +41,18 @@ static class SpanWriter
     public static SpanWriter<T> Create<T>(Span<T> span) => new(span);
     public static SpanWriter<T> Create<T>(T[]? array) => new(array);
 
-    public static void WriteHex(ref this SpanWriter<char> writer, byte value)
+    public static void WriteBase10(ref this SpanWriter<char> writer, uint value)
     {
-        
+        if (!value.TryFormat(writer.Free, out var charsWritten))
+            throw new InvalidOperationException("Not enough room to write value into span.");
+        writer.Position += charsWritten;
+    }
+
+    public static void WriteIpAddress<TAddress>(
+        ref this SpanWriter<char> writer,
+        TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
+    {
+        var n = address.Format(writer.Free);
+        writer.Position += n;
     }
 }

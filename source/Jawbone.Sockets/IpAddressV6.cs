@@ -124,66 +124,64 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
     public override readonly int GetHashCode() => HashCode.Combine(DataU32[0], DataU32[1], DataU32[2], DataU32[3], ScopeId);
     public override readonly string ToString()
     {
-        var builder = new StringBuilder(48);
-        AppendTo(builder);
-        return builder.ToString();
+        Span<char> buffer = stackalloc char[64];
+        var n = Format(buffer);
+        return buffer[..n].ToString();
     }
 
     public readonly int Format(Span<char> utf16)
     {
         var writer = SpanWriter.Create(utf16);
-    }
-
-    public readonly void AppendTo(StringBuilder builder)
-    {
         if (IsV4Mapped)
         {
-            builder.Append("::ffff:");
-            new IpAddressV4(DataU32[3]).AppendTo(builder);
-            return;
+            writer.Write("::ffff:");
+            writer.WriteIpAddress(new IpAddressV4(DataU32[3]));
+            return writer.Position;
         }
 
-        int zeroIndex = 0;
+        int zeroStart = 0;
         int zeroLength = 0;
 
         for (int i = 0; i < ArrayU16.Length; ++i)
         {
-            if (DataU16[i] == 0)
+            if (DataU16[i] != 0)
+                continue;
+
+            int j = i + 1;
+            while (j < ArrayU16.Length && DataU16[j] == 0)
+                ++j;
+
+            var length = j - i;
+
+            if (zeroLength < length)
             {
-                int j = i + 1;
-                while (j < ArrayU16.Length && DataU16[j] == 0)
-                    ++j;
-
-                var length = j - i;
-
-                if (zeroLength < length)
-                {
-                    zeroIndex = i;
-                    zeroLength = length;
-                }
-
-                i = j;
+                zeroStart = i;
+                zeroLength = length;
             }
+
+            i = j;
         }
 
         if (1 < zeroLength)
         {
-            var a = zeroIndex * 2;
-            var b = (zeroIndex + zeroLength) * 2;
-            builder
-                .AppendV6Block(DataU8[..a])
-                .Append("::")
-                .AppendV6Block(DataU8[b..]);
+            writer.WriteV6Block(DataU16[..zeroStart]);
+            writer.Write(':');
+            writer.Write(':');
+            writer.WriteV6Block(DataU16[(zeroStart + zeroLength)..]);
         }
         else
         {
-            builder.AppendV6Block(DataU8);
+            writer.WriteV6Block(DataU16);
         }
 
         if (ScopeId != 0)
-            builder.Append('%').Append(ScopeId);
-    }
+        {
+            writer.Write('%');
+            writer.WriteBase10(ScopeId);
+        }
 
+        return writer.Position;
+    }
     private static string? DoTheParse(ReadOnlySpan<char> originalInput, out IpAddressV6 result)
     {
         if (originalInput.IsEmpty)

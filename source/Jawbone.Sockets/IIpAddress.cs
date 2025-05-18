@@ -8,7 +8,7 @@ public interface IIpAddress
     bool IsDefault { get; }
     bool IsLinkLocal { get; }
     bool IsLoopback { get; }
-    void AppendTo(StringBuilder builder);
+    int Format(Span<char> utf16);
 }
 
 public interface IIpAddress<TAddress> : IEquatable<TAddress>, ISpanParsable<TAddress>, IIpAddress

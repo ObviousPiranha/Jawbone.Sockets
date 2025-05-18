@@ -18,8 +18,8 @@ ref struct SpanWriter<T>
         }
     }
 
-    public ReadOnlySpan<T> Written => Span[.._position];
-    public Span<T> Free => Span[_position..];
+    public readonly ReadOnlySpan<T> Written => Span[.._position];
+    public readonly Span<T> Free => Span[_position..];
 
     public SpanWriter(Span<T> span) => Span = span;
 

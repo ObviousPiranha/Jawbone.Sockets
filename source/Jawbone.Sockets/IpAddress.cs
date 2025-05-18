@@ -55,6 +55,26 @@ public readonly struct IpAddress : IEquatable<IpAddress>
         };
     }
 
+    public readonly int FormatUtf16(Span<char> utf16)
+    {
+        return Version switch
+        {
+            IpAddressVersion.V4 => AsV4().FormatUtf16(utf16),
+            IpAddressVersion.V6 => AsV6().FormatUtf16(utf16),
+            _ => 0
+        };
+    }
+
+    public readonly int FormatUtf8(Span<byte> utf8)
+    {
+        return Version switch
+        {
+            IpAddressVersion.V4 => AsV4().FormatUtf8(utf8),
+            IpAddressVersion.V6 => AsV6().FormatUtf8(utf8),
+            _ => 0
+        };
+    }
+
     public static explicit operator IpAddressV4(IpAddress address)
     {
         if (address.Version != IpAddressVersion.V4)

@@ -124,67 +124,126 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
     public override readonly int GetHashCode() => HashCode.Combine(DataU32[0], DataU32[1], DataU32[2], DataU32[3], ScopeId);
     public override readonly string ToString()
     {
-        var builder = new StringBuilder(48);
-        AppendTo(builder);
-        return builder.ToString();
+        Span<char> buffer = stackalloc char[64];
+        var n = FormatUtf16(buffer);
+        return buffer[..n].ToString();
     }
 
-    public readonly void AppendTo(StringBuilder builder)
+    public readonly int FormatUtf16(Span<char> utf16)
     {
+        var writer = SpanWriter.Create(utf16);
         if (IsV4Mapped)
         {
-            builder.Append("::ffff:");
-            new IpAddressV4(DataU32[3]).AppendTo(builder);
-            return;
+            writer.Write("::ffff:");
+            writer.WriteIpAddress(new IpAddressV4(DataU32[3]));
+            return writer.Position;
         }
 
-        int zeroIndex = 0;
+        int zeroStart = 0;
         int zeroLength = 0;
 
         for (int i = 0; i < ArrayU16.Length; ++i)
         {
-            if (DataU16[i] == 0)
+            if (DataU16[i] != 0)
+                continue;
+
+            int j = i + 1;
+            while (j < ArrayU16.Length && DataU16[j] == 0)
+                ++j;
+
+            var length = j - i;
+
+            if (zeroLength < length)
             {
-                int j = i + 1;
-                while (j < ArrayU16.Length && DataU16[j] == 0)
-                    ++j;
-
-                var length = j - i;
-
-                if (zeroLength < length)
-                {
-                    zeroIndex = i;
-                    zeroLength = length;
-                }
-
-                i = j;
+                zeroStart = i;
+                zeroLength = length;
             }
+
+            i = j;
         }
 
         if (1 < zeroLength)
         {
-            var a = zeroIndex * 2;
-            var b = (zeroIndex + zeroLength) * 2;
-            builder
-                .AppendV6Block(DataU8[..a])
-                .Append("::")
-                .AppendV6Block(DataU8[b..]);
+            writer.WriteV6Block(DataU16[..zeroStart]);
+            writer.Write(':');
+            writer.Write(':');
+            writer.WriteV6Block(DataU16[(zeroStart + zeroLength)..]);
         }
         else
         {
-            builder.AppendV6Block(DataU8);
+            writer.WriteV6Block(DataU16);
         }
 
         if (ScopeId != 0)
-            builder.Append('%').Append(ScopeId);
+        {
+            writer.Write('%');
+            writer.WriteBase10(ScopeId);
+        }
+
+        return writer.Position;
     }
 
-    private static string? DoTheParse(ReadOnlySpan<char> originalInput, out IpAddressV6 result)
+    public readonly int FormatUtf8(Span<byte> utf8)
+    {
+        var writer = SpanWriter.Create(utf8);
+        if (IsV4Mapped)
+        {
+            writer.Write("::ffff:"u8);
+            writer.WriteIpAddress(new IpAddressV4(DataU32[3]));
+            return writer.Position;
+        }
+
+        int zeroStart = 0;
+        int zeroLength = 0;
+
+        for (int i = 0; i < ArrayU16.Length; ++i)
+        {
+            if (DataU16[i] != 0)
+                continue;
+
+            int j = i + 1;
+            while (j < ArrayU16.Length && DataU16[j] == 0)
+                ++j;
+
+            var length = j - i;
+
+            if (zeroLength < length)
+            {
+                zeroStart = i;
+                zeroLength = length;
+            }
+
+            i = j;
+        }
+
+        if (1 < zeroLength)
+        {
+            writer.WriteV6Block(DataU16[..zeroStart]);
+            writer.Write((byte)':');
+            writer.Write((byte)':');
+            writer.WriteV6Block(DataU16[(zeroStart + zeroLength)..]);
+        }
+        else
+        {
+            writer.WriteV6Block(DataU16);
+        }
+
+        if (ScopeId != 0)
+        {
+            writer.Write((byte)'%');
+            writer.WriteBase10(ScopeId);
+        }
+
+        return writer.Position;
+    }
+
+    private static bool DoTheParse(ReadOnlySpan<char> originalInput, bool throwException, out IpAddressV6 result)
     {
         if (originalInput.IsEmpty)
         {
+            Throw("Input string is empty.");
             result = default;
-            return "Input string is empty.";
+            return false;
         }
 
         var s = originalInput;
@@ -195,8 +254,9 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
 
             if (hasOpeningBracket != hasClosingBracket)
             {
+                Throw(hasOpeningBracket ? "Missing closing bracket." : "Missing opening bracket.");
                 result = default;
-                return hasOpeningBracket ? "Missing closing bracket." : "Missing opening bracket.";
+                return false;
             }
 
             if (hasOpeningBracket)
@@ -205,19 +265,20 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
 
         if (s.Length < 2)
         {
+            Throw("Input string too short.");
             result = default;
-            return "Input string too short.";
+            return false;
         }
 
         // TODO: Make this properly flexible.
         // This would still miss plenty of other valid representations
         // for IPv4-mapped addresses, but for now, it is consistent
-        // with how AddressV6 converts such addresses to strings.
+        // with how IpAddressV6 converts such addresses to strings.
         const string IntroV4 = "::ffff:";
         if (s.StartsWith(IntroV4) && IpAddressV4.TryParse(s[IntroV4.Length..], null, out var a32))
         {
             result = (IpAddressV6)a32;
-            return null;
+            return true;
         }
 
         var scopeId = default(uint);
@@ -227,8 +288,9 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
             {
                 if (!uint.TryParse(s.Slice(scopeIndex + 1), out scopeId))
                 {
+                    Throw("Invalid scope ID.");
                     result = default;
-                    return "Invalid scope ID.";
+                    return false;
                 }
 
                 s = s[..scopeIndex];
@@ -242,20 +304,23 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         {
             if (!TryParseHexBlocks(s[..division], blocks, out var leftBlocksWritten))
             {
+                Throw("Bad hex block.");
                 result = default;
-                return "Bad hex block.";
+                return false;
             }
 
             if (!TryParseHexBlocks(s[(division + 2)..], blocks[leftBlocksWritten..], out var rightBlocksWritten))
             {
+                Throw("Bad hex block.");
                 result = default;
-                return "Bad hex block.";
+                return false;
             }
 
             if (leftBlocksWritten + rightBlocksWritten == ArrayU16.Length)
             {
+                Throw("Malformed representation.");
                 result = default;
-                return "Malformed representation.";
+                return false;
             }
 
             var end = leftBlocksWritten + rightBlocksWritten;
@@ -264,8 +329,9 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         }
         else if (!TryParseHexBlocks(s, blocks, out var blocksWritten) || blocksWritten < ArrayU16.Length)
         {
+            Throw("Bad hex block.");
             result = default;
-            return "Bad hex block.";
+            return false;
         }
 
         result = default;
@@ -277,7 +343,13 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
             foreach (ref var n in result.DataU16)
                 n = BinaryPrimitives.ReverseEndianness(n);
         }
-        return null;
+        return true;
+
+        void Throw(string message)
+        {
+            if (throwException)
+                throw new FormatException(message);
+        }
 
         static bool TryParseHexBlocks(ReadOnlySpan<char> s, Span<ushort> blocks, out int blocksWritten)
         {
@@ -366,31 +438,25 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
 
     public static IpAddressV6 Parse(ReadOnlySpan<char> s, IFormatProvider? provider)
     {
-        var exceptionMessage = DoTheParse(s, out var result);
-        if (exceptionMessage is not null)
-            throw new FormatException(exceptionMessage);
+        DoTheParse(s, true, out var result);
         return result;
     }
 
     public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, [MaybeNullWhen(false)] out IpAddressV6 result)
     {
-        var exceptionMessage = DoTheParse(s, out result);
-        return exceptionMessage is null;
+        return DoTheParse(s, false, out result);
     }
 
     public static IpAddressV6 Parse(string s, IFormatProvider? provider)
     {
         ArgumentNullException.ThrowIfNull(s);
-        var exceptionMessage = DoTheParse(s, out var result);
-        if (exceptionMessage is not null)
-            throw new FormatException(exceptionMessage);
+        DoTheParse(s, true, out var result);
         return result;
     }
 
     public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out IpAddressV6 result)
     {
-        var exceptionMessage = DoTheParse(s, out result);
-        return exceptionMessage is null;
+        return DoTheParse(s, false, out result);
     }
 
     public static bool operator ==(IpAddressV6 a, IpAddressV6 b) => a.Equals(b);

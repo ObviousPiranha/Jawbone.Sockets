@@ -75,21 +75,35 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
     public override readonly int GetHashCode() => DataU32.GetHashCode();
     public override readonly string ToString()
     {
-        var builder = new StringBuilder(15);
-        AppendTo(builder);
-        return builder.ToString();
+        Span<char> buffer = stackalloc char[16];
+        var n = FormatUtf16(buffer);
+        return buffer[..n].ToString();
     }
 
-    public readonly void AppendTo(StringBuilder builder)
+    public readonly int FormatUtf16(Span<char> utf16)
     {
-        builder
-            .Append(DataU8[0])
-            .Append('.')
-            .Append(DataU8[1])
-            .Append('.')
-            .Append(DataU8[2])
-            .Append('.')
-            .Append(DataU8[3]);
+        var writer = SpanWriter.Create(utf16);
+        writer.WriteBase10(DataU8[0]);
+        writer.Write('.');
+        writer.WriteBase10(DataU8[1]);
+        writer.Write('.');
+        writer.WriteBase10(DataU8[2]);
+        writer.Write('.');
+        writer.WriteBase10(DataU8[3]);
+        return writer.Position;
+    }
+
+    public readonly int FormatUtf8(Span<byte> utf8)
+    {
+        var writer = SpanWriter.Create(utf8);
+        writer.WriteBase10(DataU8[0]);
+        writer.Write((byte)'.');
+        writer.WriteBase10(DataU8[1]);
+        writer.Write((byte)'.');
+        writer.WriteBase10(DataU8[2]);
+        writer.Write((byte)'.');
+        writer.WriteBase10(DataU8[3]);
+        return writer.Position;
     }
 
     private static string? DoTheParse(ReadOnlySpan<char> s, out IpAddressV4 result)

@@ -1,10 +1,9 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Jawbone.Sockets;
 
-public struct IpEndpoint : IEquatable<IpEndpoint>
+public struct IpEndpoint : IEquatable<IpEndpoint>, ISpanFormattable, IUtf8SpanFormattable
 {
     public IpAddress Address;
     public NetworkPort Port;
@@ -26,30 +25,8 @@ public struct IpEndpoint : IEquatable<IpEndpoint>
     public readonly override string ToString()
     {
         Span<char> buffer = stackalloc char[64];
-        var n = FormatUtf16(buffer);
+        _ = TryFormat(buffer, out var n, default, default);
         return buffer[..n].ToString();
-    }
-
-    public readonly int FormatUtf16(Span<char> utf16)
-    {
-        var writer = SpanWriter.Create(utf16);
-        writer.Write('[');
-        writer.WriteIpAddress(Address);
-        writer.Write(']');
-        writer.Write(':');
-        writer.WriteBase10(Port.HostValue);
-        return writer.Position;
-    }
-
-    public readonly int FormatUtf8(Span<byte> utf16)
-    {
-        var writer = SpanWriter.Create(utf16);
-        writer.Write((byte)'[');
-        writer.WriteIpAddress(Address);
-        writer.Write((byte)']');
-        writer.Write((byte)':');
-        writer.WriteBase10(Port.HostValue);
-        return writer.Position;
     }
 
     internal readonly IpEndpoint<IpAddressV4> AsV4() => Address.AsV4().OnPort(Port);
@@ -86,10 +63,46 @@ public struct IpEndpoint : IEquatable<IpEndpoint>
     {
         return Create((IpAddressV6)endpoint.Address, endpoint.Port);
     }
+
+    public readonly bool TryFormat(
+        Span<byte> utf8Destination,
+        out int bytesWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider)
+    {
+        var writer = SpanWriter.Create(utf8Destination);
+        var result =
+            writer.TryWrite((byte)'[') &&
+            writer.TryWriteIpAddress(Address) &&
+            writer.TryWrite((byte)']') &&
+            writer.TryWrite((byte)':') &&
+            writer.TryWriteBase10(Port.HostValue);
+        bytesWritten = writer.Position;
+        return result;
+    }
+
+    public readonly bool TryFormat(
+        Span<char> destination,
+        out int charsWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider)
+    {
+        var writer = SpanWriter.Create(destination);
+        var result =
+            writer.TryWrite('[') &&
+            writer.TryWriteIpAddress(Address) &&
+            writer.TryWrite(']') &&
+            writer.TryWrite(':') &&
+            writer.TryWriteBase10(Port.HostValue);
+        charsWritten = writer.Position;
+        return result;
+    }
+
+    public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct IpEndpoint<TAddress> : IEquatable<IpEndpoint<TAddress>>
+public struct IpEndpoint<TAddress> : IEquatable<IpEndpoint<TAddress>>, ISpanFormattable, IUtf8SpanFormattable
     where TAddress : unmanaged, IIpAddress<TAddress>
 {
     public TAddress Address;
@@ -106,37 +119,51 @@ public struct IpEndpoint<TAddress> : IEquatable<IpEndpoint<TAddress>>
     {
     }
 
-    public readonly int FormatUtf16(Span<char> utf16)
-    {
-        var writer = SpanWriter.Create(utf16);
-        writer.Write('[');
-        writer.WriteIpAddress(Address);
-        writer.Write(']');
-        writer.Write(':');
-        writer.WriteBase10(Port.HostValue);
-        return writer.Position;
-    }
-
-    public readonly int FormatUtf8(Span<byte> utf8)
-    {
-        var writer = SpanWriter.Create(utf8);
-        writer.Write((byte)'[');
-        writer.WriteIpAddress(Address);
-        writer.Write((byte)']');
-        writer.Write((byte)':');
-        writer.WriteBase10(Port.HostValue);
-        return writer.Position;
-    }
-
     public readonly bool Equals(IpEndpoint<TAddress> other) => Address.Equals(other.Address) && Port.Equals(other.Port);
     public override readonly bool Equals(object? obj) => obj is IpEndpoint<TAddress> other && Equals(other);
     public override readonly int GetHashCode() => HashCode.Combine(Address, Port);
     public override readonly string ToString()
     {
         Span<char> buffer = stackalloc char[64];
-        var n = FormatUtf16(buffer);
+        _ = TryFormat(buffer, out var n, default, default);
         return buffer[..n].ToString();
     }
+
+    public readonly bool TryFormat(
+        Span<byte> utf8Destination,
+        out int bytesWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider)
+    {
+        var writer = SpanWriter.Create(utf8Destination);
+        var result =
+            writer.TryWrite((byte)'[') &&
+            writer.TryWriteIpAddress(Address) &&
+            writer.TryWrite((byte)']') &&
+            writer.TryWrite((byte)':') &&
+            writer.TryWriteBase10(Port.HostValue);
+        bytesWritten = writer.Position;
+        return result;
+    }
+
+    public readonly bool TryFormat(
+        Span<char> destination,
+        out int charsWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider)
+    {
+        var writer = SpanWriter.Create(destination);
+        var result =
+            writer.TryWrite('[') &&
+            writer.TryWriteIpAddress(Address) &&
+            writer.TryWrite(']') &&
+            writer.TryWrite(':') &&
+            writer.TryWriteBase10(Port.HostValue);
+        charsWritten = writer.Position;
+        return result;
+    }
+
+    public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
 
     public static bool operator ==(IpEndpoint<TAddress> a, IpEndpoint<TAddress> b) => a.Equals(b);
     public static bool operator !=(IpEndpoint<TAddress> a, IpEndpoint<TAddress> b) => !a.Equals(b);

@@ -76,35 +76,53 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
     public override readonly string ToString()
     {
         Span<char> buffer = stackalloc char[16];
-        var n = FormatUtf16(buffer);
+        _ = TryFormat(buffer, out var n, default, default);
         return buffer[..n].ToString();
     }
 
-    public readonly int FormatUtf16(Span<char> utf16)
+    public readonly bool TryFormat(
+        Span<byte> utf8Destination,
+        out int bytesWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider)
     {
-        var writer = SpanWriter.Create(utf16);
-        writer.WriteBase10(DataU8[0]);
-        writer.Write('.');
-        writer.WriteBase10(DataU8[1]);
-        writer.Write('.');
-        writer.WriteBase10(DataU8[2]);
-        writer.Write('.');
-        writer.WriteBase10(DataU8[3]);
-        return writer.Position;
+        var writer = SpanWriter.Create(utf8Destination);
+        var result =
+            writer.TryWriteBase10(DataU8[0]) &&
+            writer.TryWrite((byte)'.') &&
+            writer.TryWriteBase10(DataU8[1]) &&
+            writer.TryWrite((byte)'.') &&
+            writer.TryWriteBase10(DataU8[2]) &&
+            writer.TryWrite((byte)'.') &&
+            writer.TryWriteBase10(DataU8[3]);
+        bytesWritten = writer.Position;
+        return result;
     }
 
-    public readonly int FormatUtf8(Span<byte> utf8)
+    public readonly bool TryFormat(Span<byte> utf8Destination, out int bytesWritten) => TryFormat(utf8Destination, out bytesWritten);
+
+    public readonly bool TryFormat(
+        Span<char> destination,
+        out int charsWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider)
     {
-        var writer = SpanWriter.Create(utf8);
-        writer.WriteBase10(DataU8[0]);
-        writer.Write((byte)'.');
-        writer.WriteBase10(DataU8[1]);
-        writer.Write((byte)'.');
-        writer.WriteBase10(DataU8[2]);
-        writer.Write((byte)'.');
-        writer.WriteBase10(DataU8[3]);
-        return writer.Position;
+        var writer = SpanWriter.Create(destination);
+        var result =
+            writer.TryWriteBase10(DataU8[0]) &&
+            writer.TryWrite('.') &&
+            writer.TryWriteBase10(DataU8[1]) &&
+            writer.TryWrite('.') &&
+            writer.TryWriteBase10(DataU8[2]) &&
+            writer.TryWrite('.') &&
+            writer.TryWriteBase10(DataU8[3]);
+        charsWritten = writer.Position;
+        return result;
     }
+
+    public readonly bool TryFormat(Span<char> destination, out int charsWritten) => TryFormat(destination, out charsWritten);
+
+    public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
 
     private static bool DoTheParse(ReadOnlySpan<char> s, bool throwException, out IpAddressV4 result)
     {

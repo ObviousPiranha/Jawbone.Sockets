@@ -2,7 +2,7 @@ using System;
 
 namespace Jawbone.Sockets;
 
-public readonly struct IpAddress : IEquatable<IpAddress>
+public readonly struct IpAddress : IEquatable<IpAddress>, ISpanFormattable, IUtf8SpanFormattable
 {
     private readonly IpAddressV6 _storage;
 
@@ -35,13 +35,13 @@ public readonly struct IpAddress : IEquatable<IpAddress>
         };
     }
 
-    public readonly override string? ToString()
+    public readonly override string ToString()
     {
         return Version switch
         {
             IpAddressVersion.V4 => AsV4().ToString(),
             IpAddressVersion.V6 => AsV6().ToString(),
-            _ => null
+            _ => ""
         };
     }
 
@@ -55,25 +55,41 @@ public readonly struct IpAddress : IEquatable<IpAddress>
         };
     }
 
-    public readonly int FormatUtf16(Span<char> utf16)
+    public readonly bool TryFormat(
+        Span<byte> utf8Destination,
+        out int bytesWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider)
     {
-        return Version switch
+        bytesWritten = 0;
+        var result = Version switch
         {
-            IpAddressVersion.V4 => AsV4().FormatUtf16(utf16),
-            IpAddressVersion.V6 => AsV6().FormatUtf16(utf16),
-            _ => 0
+            IpAddressVersion.V4 => AsV4().TryFormat(utf8Destination, out bytesWritten, format, provider),
+            IpAddressVersion.V6 => AsV6().TryFormat(utf8Destination, out bytesWritten, format, provider),
+            _ => false
         };
+
+        return result;
     }
 
-    public readonly int FormatUtf8(Span<byte> utf8)
+    public readonly bool TryFormat(
+        Span<char> destination,
+        out int charsWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider)
     {
-        return Version switch
+        charsWritten = 0;
+        var result = Version switch
         {
-            IpAddressVersion.V4 => AsV4().FormatUtf8(utf8),
-            IpAddressVersion.V6 => AsV6().FormatUtf8(utf8),
-            _ => 0
+            IpAddressVersion.V4 => AsV4().TryFormat(destination, out charsWritten, format, provider),
+            IpAddressVersion.V6 => AsV6().TryFormat(destination, out charsWritten, format, provider),
+            _ => false
         };
+
+        return result;
     }
+
+    public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
 
     public static explicit operator IpAddressV4(IpAddress address)
     {

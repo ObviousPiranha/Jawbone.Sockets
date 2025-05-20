@@ -23,6 +23,22 @@ ref struct SpanWriter<T>
 
     public SpanWriter(Span<T> span) => Span = span;
 
+    public bool TryWrite(T item)
+    {
+        if (Span.Length <= _position)
+            return false;
+        Span[_position++] = item;
+        return true;
+    }
+
+    public bool TryWrite(params ReadOnlySpan<T> items)
+    {
+        if (!items.TryCopyTo(Free))
+            return false;
+        _position += items.Length;
+        return true;
+    }
+
     public void Write(T item)
     {
         Span[_position] = item;
@@ -69,19 +85,49 @@ static class SpanWriter
         writer.Position += charsWritten;
     }
 
+    public static bool TryWriteBase10(ref this SpanWriter<char> writer, byte value)
+    {
+        var result = value.TryFormat(writer.Free, out var charsWritten);
+        writer.Position += charsWritten;
+        return result;
+    }
+
+    public static bool TryWriteBase10(ref this SpanWriter<byte> writer, byte value)
+    {
+        var result = value.TryFormat(writer.Free, out var charsWritten);
+        writer.Position += charsWritten;
+        return result;
+    }
+
+    public static bool TryWriteBase10(ref this SpanWriter<char> writer, uint value)
+    {
+        var result = value.TryFormat(writer.Free, out var charsWritten);
+        writer.Position += charsWritten;
+        return result;
+    }
+
+    public static bool TryWriteBase10(ref this SpanWriter<byte> writer, uint value)
+    {
+        var result = value.TryFormat(writer.Free, out var charsWritten);
+        writer.Position += charsWritten;
+        return result;
+    }
+
     public static void WriteIpAddress(
         ref this SpanWriter<char> writer,
         IpAddress address)
     {
-        var n = address.FormatUtf16(writer.Free);
+        if (!address.TryFormat(writer.Free, out var n, default, default))
+            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
         writer.Position += n;
     }
 
     public static void WriteIpAddress(
         ref this SpanWriter<byte> writer,
-        IpAddress address)
+        in IpAddress address)
     {
-        var n = address.FormatUtf8(writer.Free);
+        if (!address.TryFormat(writer.Free, out var n, default, default))
+            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
         writer.Position += n;
     }
 
@@ -89,7 +135,8 @@ static class SpanWriter
         ref this SpanWriter<char> writer,
         TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
     {
-        var n = address.FormatUtf16(writer.Free);
+        if (!address.TryFormat(writer.Free, out var n, default, default))
+            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
         writer.Position += n;
     }
 
@@ -97,7 +144,48 @@ static class SpanWriter
         ref this SpanWriter<byte> writer,
         TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
     {
-        var n = address.FormatUtf8(writer.Free);
+        if (!address.TryFormat(writer.Free, out var n, default, default))
+            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
         writer.Position += n;
+    }
+
+    public static bool TryWriteIpAddress(
+        ref this SpanWriter<char> writer,
+        in IpAddress address)
+    {
+        if (!address.TryFormat(writer.Free, out var n, default, default))
+            return false;
+        writer.Position += n;
+        return true;
+    }
+
+    public static bool TryWriteIpAddress(
+        ref this SpanWriter<byte> writer,
+        in IpAddress address)
+    {
+        if (!address.TryFormat(writer.Free, out var n, default, default))
+            return false;
+        writer.Position += n;
+        return true;
+    }
+
+    public static bool TryWriteIpAddress<TAddress>(
+        ref this SpanWriter<char> writer,
+        TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
+    {
+        if (!address.TryFormat(writer.Free, out var n, default, default))
+            return false;
+        writer.Position += n;
+        return true;
+    }
+
+    public static bool TryWriteIpAddress<TAddress>(
+        ref this SpanWriter<byte> writer,
+        TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
+    {
+        if (!address.TryFormat(writer.Free, out var n, default, default))
+            return false;
+        writer.Position += n;
+        return true;
     }
 }

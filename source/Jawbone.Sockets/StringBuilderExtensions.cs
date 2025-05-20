@@ -7,7 +7,7 @@ public static class StringBuilderExtensions
 {
     public static StringBuilder AppendIpAddress(
         this StringBuilder builder,
-        IpAddress address)
+        in IpAddress address)
     {
         Span<char> buffer = stackalloc char[64];
         var writer = SpanWriter.Create(buffer);
@@ -20,7 +20,7 @@ public static class StringBuilderExtensions
         TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
     {
         Span<char> buffer = stackalloc char[64];
-        var n = address.FormatUtf16(buffer);
+        _ = address.TryFormat(buffer, out var n, default, default);
         return builder.Append(buffer[..n]);
     }
 
@@ -29,7 +29,7 @@ public static class StringBuilderExtensions
         IpEndpoint<TAddress> endpoint) where TAddress : unmanaged, IIpAddress<TAddress>
     {
         Span<char> buffer = stackalloc char[64];
-        var n = endpoint.FormatUtf16(buffer);
+        _ = endpoint.TryFormat(buffer, out var n, default, default);
         return builder.Append(buffer[..n]);
     }
 }

@@ -3,7 +3,6 @@ using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Jawbone.Sockets;
 
@@ -125,18 +124,25 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
     public override readonly string ToString()
     {
         Span<char> buffer = stackalloc char[64];
-        var n = FormatUtf16(buffer);
+        TryFormat(buffer, out var n, default, default);
         return buffer[..n].ToString();
     }
 
-    public readonly int FormatUtf16(Span<char> utf16)
+    public readonly bool TryFormat(
+        Span<byte> utf8Destination,
+        out int bytesWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider)
     {
-        var writer = SpanWriter.Create(utf16);
+        var writer = SpanWriter.Create(utf8Destination);
         if (IsV4Mapped)
         {
-            writer.Write("::ffff:");
-            writer.WriteIpAddress(new IpAddressV4(DataU32[3]));
-            return writer.Position;
+            var success =
+                writer.TryWrite("::ffff:"u8) &&
+                writer.TryWriteIpAddress(new IpAddressV4(DataU32[3]));
+
+            bytesWritten = writer.Position;
+            return success;
         }
 
         int zeroStart = 0;
@@ -162,35 +168,48 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
             i = j;
         }
 
+        bool result;
         if (1 < zeroLength)
         {
-            writer.WriteV6Block(DataU16[..zeroStart]);
-            writer.Write(':');
-            writer.Write(':');
-            writer.WriteV6Block(DataU16[(zeroStart + zeroLength)..]);
+            result =
+                writer.TryWriteV6Block(DataU16[..zeroStart]) &&
+                writer.TryWrite((byte)':') &&
+                writer.TryWrite((byte)':') &&
+                writer.TryWriteV6Block(DataU16[(zeroStart + zeroLength)..]);
         }
         else
         {
-            writer.WriteV6Block(DataU16);
+            result = writer.TryWriteV6Block(DataU16);
         }
 
-        if (ScopeId != 0)
+        if (result && ScopeId != 0)
         {
-            writer.Write('%');
-            writer.WriteBase10(ScopeId);
+            result =
+                writer.TryWrite((byte)'%') &&
+                writer.TryWriteBase10(ScopeId);
         }
 
-        return writer.Position;
+        bytesWritten = writer.Position;
+        return result;
     }
 
-    public readonly int FormatUtf8(Span<byte> utf8)
+    public readonly bool TryFormat(Span<byte> utf8Destination, out int bytesWritten) => TryFormat(utf8Destination, out bytesWritten);
+
+    public readonly bool TryFormat(
+        Span<char> destination,
+        out int charsWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider)
     {
-        var writer = SpanWriter.Create(utf8);
+        var writer = SpanWriter.Create(destination);
         if (IsV4Mapped)
         {
-            writer.Write("::ffff:"u8);
-            writer.WriteIpAddress(new IpAddressV4(DataU32[3]));
-            return writer.Position;
+            var success =
+                writer.TryWrite("::ffff:") &&
+                writer.TryWriteIpAddress(new IpAddressV4(DataU32[3]));
+
+            charsWritten = writer.Position;
+            return success;
         }
 
         int zeroStart = 0;
@@ -216,26 +235,34 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
             i = j;
         }
 
+        bool result;
         if (1 < zeroLength)
         {
-            writer.WriteV6Block(DataU16[..zeroStart]);
-            writer.Write((byte)':');
-            writer.Write((byte)':');
-            writer.WriteV6Block(DataU16[(zeroStart + zeroLength)..]);
+            result =
+                writer.TryWriteV6Block(DataU16[..zeroStart]) &&
+                writer.TryWrite(':') &&
+                writer.TryWrite(':') &&
+                writer.TryWriteV6Block(DataU16[(zeroStart + zeroLength)..]);
         }
         else
         {
-            writer.WriteV6Block(DataU16);
+            result = writer.TryWriteV6Block(DataU16);
         }
 
-        if (ScopeId != 0)
+        if (result && ScopeId != 0)
         {
-            writer.Write((byte)'%');
-            writer.WriteBase10(ScopeId);
+            result =
+                writer.TryWrite('%') &&
+                writer.TryWriteBase10(ScopeId);
         }
 
-        return writer.Position;
+        charsWritten = writer.Position;
+        return result;
     }
+
+    public readonly bool TryFormat(Span<char> destination, out int charsWritten) => TryFormat(destination, out charsWritten);
+
+    public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
 
     private static bool DoTheParse(ReadOnlySpan<char> originalInput, bool throwException, out IpAddressV6 result)
     {

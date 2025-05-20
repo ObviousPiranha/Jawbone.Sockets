@@ -12,4 +12,6 @@ static class ExceptionMessages
     public const string Accept = "Unable to accept socket.";
     public const string TcpNoDelay = "Unable to enable TCP_NODELAY.";
     public const string Dns = "Unable to get address info.";
+
+    public const string SpanRoom = "Not enough room to write value into span.";
 }

@@ -15,6 +15,8 @@ public interface IIpAddress
 public interface IIpAddress<TAddress> : IEquatable<TAddress>, ISpanParsable<TAddress>, IIpAddress
     where TAddress : unmanaged, IIpAddress<TAddress>
 {
+    static abstract TAddress Parse(ReadOnlySpan<char> s);
+    static abstract bool TryParse(ReadOnlySpan<char> s, out TAddress result);
     static abstract TAddress Any { get; }
     static abstract TAddress Local { get; }
 }

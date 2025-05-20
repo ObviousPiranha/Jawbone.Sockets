@@ -22,7 +22,7 @@ var localhost = IpAddressV4.Local;
 var v6 = new IpAddressV6([55, 23, 11, 1, 9, 5, 22, 1, 0, 0, 0, 3, 12, 94, 201, 7]);
 
 // Or parse it. Lots of options.
-var parsedV6 = IpAddressV6.Parse("7f13:22e9::4000:910d", null);
+var parsedV6 = IpAddressV6.Parse("7f13:22e9::4000:910d");
 ```
 
 ### IP Endpoints

@@ -44,14 +44,28 @@ static class SpanWriter
     public static void WriteBase10(ref this SpanWriter<char> writer, uint value)
     {
         if (!value.TryFormat(writer.Free, out var charsWritten))
-            throw new InvalidOperationException("Not enough room to write value into span.");
+            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
         writer.Position += charsWritten;
     }
 
     public static void WriteBase10(ref this SpanWriter<byte> writer, uint value)
     {
         if (!value.TryFormat(writer.Free, out var charsWritten))
-            throw new InvalidOperationException("Not enough room to write value into span.");
+            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
+        writer.Position += charsWritten;
+    }
+
+    public static void WriteBase10(ref this SpanWriter<char> writer, byte value)
+    {
+        if (!value.TryFormat(writer.Free, out var charsWritten))
+            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
+        writer.Position += charsWritten;
+    }
+
+    public static void WriteBase10(ref this SpanWriter<byte> writer, byte value)
+    {
+        if (!value.TryFormat(writer.Free, out var charsWritten))
+            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
         writer.Position += charsWritten;
     }
 

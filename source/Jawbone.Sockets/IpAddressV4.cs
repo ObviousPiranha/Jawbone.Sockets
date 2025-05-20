@@ -106,7 +106,7 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
         return writer.Position;
     }
 
-    private static string? DoTheParse(ReadOnlySpan<char> s, out IpAddressV4 result)
+    private static bool DoTheParse(ReadOnlySpan<char> s, bool throwException, out IpAddressV4 result)
     {
         // TODO: Support atypical formats.
         // https://en.wikipedia.org/wiki/Internet_Protocol_version_4#Address_representations
@@ -115,46 +115,54 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
         const string MissingDot = "Missing dot.";
 
         var bytes = default(ArrayU8);
+        var parseIndex = ParseByte(s, out var b);
 
-        if (!TryParseByte(s, out var b))
+        if (parseIndex == 0)
         {
+            Throw(UnableToParseByte);
             result = default;
-            return UnableToParseByte;
+            return false;
         }
 
         bytes[0] = b;
-        int parseIndex = Length(b);
         int next = 1;
 
         for (int i = 0; i < 3; ++i)
         {
             if (parseIndex == s.Length || s[parseIndex] != '.')
             {
+                Throw(MissingDot);
                 result = default;
-                return MissingDot;
+                return false;
             }
 
-            if (!TryParseByte(s[++parseIndex..], out b))
+            var n = ParseByte(s[++parseIndex..], out b);
+            if (n == 0)
             {
+                Throw(UnableToParseByte);
                 result = default;
-                return UnableToParseByte;
+                return false;
             }
 
-            parseIndex += Length(b);
+            parseIndex += n;
             bytes[next++] = b;
         }
 
         result = new IpAddressV4(bytes);
-        return null;
+        return true;
 
-        static int Length(int b) => 100 <= b ? 3 : 10 <= b ? 2 : 1;
+        void Throw(string message)
+        {
+            if (throwException)
+                throw new FormatException(message);
+        }
         static bool IsDigit(int c) => '0' <= c && c <= '9';
-        static bool TryParseByte(ReadOnlySpan<char> span, out byte b)
+        static int ParseByte(ReadOnlySpan<char> span, out byte b)
         {
             if (span.IsEmpty || !IsDigit(span[0]))
             {
                 b = default;
-                return false;
+                return 0;
             }
 
             int result = span[0] - '0';
@@ -166,35 +174,37 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
                 if (!IsDigit(c))
                 {
                     b = (byte)result;
-                    return true;
+                    return i;
                 }
 
                 result = result * 10 + (c - '0');
                 if (byte.MaxValue < result)
                 {
                     b = default;
-                    return false;
+                    return 0;
                 }
             }
 
             b = (byte)result;
-            return true;
+            return span.Length;
         }
     }
 
     public static IpAddressV4 Parse(ReadOnlySpan<char> s, IFormatProvider? provider)
     {
-        var exceptionMessage = DoTheParse(s, out var result);
-        if (exceptionMessage is not null)
-            throw new FormatException(exceptionMessage);
+        _ = DoTheParse(s, true, out var result);
         return result;
     }
 
+    public static IpAddressV4 Parse(ReadOnlySpan<char> s) => Parse(s, null);
+
     public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, [MaybeNullWhen(false)] out IpAddressV4 result)
     {
-        var exceptionMessage = DoTheParse(s, out result);
-        return exceptionMessage is null;
+        var succeeded = DoTheParse(s, false, out result);
+        return succeeded;
     }
+
+    public static bool TryParse(ReadOnlySpan<char> s, out IpAddressV4 result) => TryParse(s, null, out result);
 
     public static IpAddressV4 Parse(string s, IFormatProvider? provider)
     {

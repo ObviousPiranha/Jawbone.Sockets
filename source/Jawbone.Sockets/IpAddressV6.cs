@@ -239,6 +239,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
 
     private static bool DoTheParse(ReadOnlySpan<char> originalInput, bool throwException, out IpAddressV6 result)
     {
+        const string BadHexBlock = "Bad hex block.";
         if (originalInput.IsEmpty)
         {
             Throw("Input string is empty.");
@@ -304,14 +305,14 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         {
             if (!TryParseHexBlocks(s[..division], blocks, out var leftBlocksWritten))
             {
-                Throw("Bad hex block.");
+                Throw(BadHexBlock);
                 result = default;
                 return false;
             }
 
             if (!TryParseHexBlocks(s[(division + 2)..], blocks[leftBlocksWritten..], out var rightBlocksWritten))
             {
-                Throw("Bad hex block.");
+                Throw(BadHexBlock);
                 result = default;
                 return false;
             }
@@ -329,7 +330,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         }
         else if (!TryParseHexBlocks(s, blocks, out var blocksWritten) || blocksWritten < ArrayU16.Length)
         {
-            Throw("Bad hex block.");
+            Throw(BadHexBlock);
             result = default;
             return false;
         }
@@ -442,10 +443,14 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         return result;
     }
 
+    public static IpAddressV6 Parse(ReadOnlySpan<char> s) => Parse(s, null);
+
     public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, [MaybeNullWhen(false)] out IpAddressV6 result)
     {
         return DoTheParse(s, false, out result);
     }
+
+    public static bool TryParse(ReadOnlySpan<char> s, out IpAddressV6 result) => TryParse(s, null, out result);
 
     public static IpAddressV6 Parse(string s, IFormatProvider? provider)
     {

@@ -34,6 +34,8 @@ public static class Dns
             .Select(static endpoint => endpoint.AsV6());
     }
 
+    public static IpEndpoint<IpAddressV4> GetEndpointV4(string? node) => QueryV4(node).First();
+    public static IpEndpoint<IpAddressV6> GetEndpointV6(string? node) => QueryV6(node).First();
     public static IpAddressV4 GetAddressV4(string? node) => QueryV4(node).First().Address;
     public static IpAddressV6 GetAddressV6(string? node) => QueryV6(node).First().Address;
 

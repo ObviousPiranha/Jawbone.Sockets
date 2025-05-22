@@ -58,8 +58,8 @@ public readonly struct IpAddress : IEquatable<IpAddress>, ISpanFormattable, IUtf
     public readonly bool TryFormat(
         Span<byte> utf8Destination,
         out int bytesWritten,
-        ReadOnlySpan<char> format,
-        IFormatProvider? provider)
+        ReadOnlySpan<char> format = default,
+        IFormatProvider? provider = default)
     {
         bytesWritten = 0;
         var result = Version switch
@@ -75,8 +75,8 @@ public readonly struct IpAddress : IEquatable<IpAddress>, ISpanFormattable, IUtf
     public readonly bool TryFormat(
         Span<char> destination,
         out int charsWritten,
-        ReadOnlySpan<char> format,
-        IFormatProvider? provider)
+        ReadOnlySpan<char> format = default,
+        IFormatProvider? provider = default)
     {
         charsWritten = 0;
         var result = Version switch

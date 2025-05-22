@@ -9,27 +9,34 @@ public static class StringBuilderExtensions
         this StringBuilder builder,
         in IpAddress address)
     {
-        Span<char> buffer = stackalloc char[64];
-        var writer = SpanWriter.Create(buffer);
-        writer.WriteIpAddress(address);
-        return builder.Append(writer.Written);
+        return AppendFormattable(builder, address);
     }
 
     public static StringBuilder AppendIpAddress<TAddress>(
         this StringBuilder builder,
         TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
     {
-        Span<char> buffer = stackalloc char[64];
-        _ = address.TryFormat(buffer, out var n, default, default);
-        return builder.Append(buffer[..n]);
+        return AppendFormattable(builder, address);
+    }
+
+    public static StringBuilder AppendIpEndpoint<TAddress>(
+        this StringBuilder builder,
+        IpEndpoint endpoint)
+    {
+        return AppendFormattable(builder, endpoint);
     }
 
     public static StringBuilder AppendIpEndpoint<TAddress>(
         this StringBuilder builder,
         IpEndpoint<TAddress> endpoint) where TAddress : unmanaged, IIpAddress<TAddress>
     {
+        return AppendFormattable(builder, endpoint);
+    }
+
+    private static StringBuilder AppendFormattable<T>(StringBuilder builder, T item) where T : ISpanFormattable
+    {
         Span<char> buffer = stackalloc char[64];
-        _ = endpoint.TryFormat(buffer, out var n, default, default);
+        _ = item.TryFormat(buffer, out var n, default, default);
         return builder.Append(buffer[..n]);
     }
 }

@@ -57,135 +57,25 @@ static class SpanWriter
     public static SpanWriter<T> Create<T>(Span<T> span) => new(span);
     public static SpanWriter<T> Create<T>(T[]? array) => new(array);
 
-    public static void WriteBase10(ref this SpanWriter<char> writer, uint value)
+    public static bool TryWriteFormattable<T>(
+        ref this SpanWriter<byte> writer,
+        T item,
+        ReadOnlySpan<char> format = default,
+        IFormatProvider? provider = default) where T : IUtf8SpanFormattable
     {
-        if (!value.TryFormat(writer.Free, out var charsWritten))
-            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
-        writer.Position += charsWritten;
-    }
-
-    public static void WriteBase10(ref this SpanWriter<byte> writer, uint value)
-    {
-        if (!value.TryFormat(writer.Free, out var charsWritten))
-            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
-        writer.Position += charsWritten;
-    }
-
-    public static void WriteBase10(ref this SpanWriter<char> writer, byte value)
-    {
-        if (!value.TryFormat(writer.Free, out var charsWritten))
-            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
-        writer.Position += charsWritten;
-    }
-
-    public static void WriteBase10(ref this SpanWriter<byte> writer, byte value)
-    {
-        if (!value.TryFormat(writer.Free, out var charsWritten))
-            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
-        writer.Position += charsWritten;
-    }
-
-    public static bool TryWriteBase10(ref this SpanWriter<char> writer, byte value)
-    {
-        var result = value.TryFormat(writer.Free, out var charsWritten);
-        writer.Position += charsWritten;
+        var result = item.TryFormat(writer.Free, out var bytesWritten, format, provider);
+        writer.Position += bytesWritten;
         return result;
     }
 
-    public static bool TryWriteBase10(ref this SpanWriter<byte> writer, byte value)
+    public static bool TryWriteFormattable<T>(
+        ref this SpanWriter<char> writer,
+        T item,
+        ReadOnlySpan<char> format = default,
+        IFormatProvider? provider = default) where T : ISpanFormattable
     {
-        var result = value.TryFormat(writer.Free, out var charsWritten);
+        var result = item.TryFormat(writer.Free, out var charsWritten, format, provider);
         writer.Position += charsWritten;
         return result;
-    }
-
-    public static bool TryWriteBase10(ref this SpanWriter<char> writer, uint value)
-    {
-        var result = value.TryFormat(writer.Free, out var charsWritten);
-        writer.Position += charsWritten;
-        return result;
-    }
-
-    public static bool TryWriteBase10(ref this SpanWriter<byte> writer, uint value)
-    {
-        var result = value.TryFormat(writer.Free, out var charsWritten);
-        writer.Position += charsWritten;
-        return result;
-    }
-
-    public static void WriteIpAddress(
-        ref this SpanWriter<char> writer,
-        IpAddress address)
-    {
-        if (!address.TryFormat(writer.Free, out var n, default, default))
-            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
-        writer.Position += n;
-    }
-
-    public static void WriteIpAddress(
-        ref this SpanWriter<byte> writer,
-        in IpAddress address)
-    {
-        if (!address.TryFormat(writer.Free, out var n, default, default))
-            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
-        writer.Position += n;
-    }
-
-    public static void WriteIpAddress<TAddress>(
-        ref this SpanWriter<char> writer,
-        TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
-    {
-        if (!address.TryFormat(writer.Free, out var n, default, default))
-            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
-        writer.Position += n;
-    }
-
-    public static void WriteIpAddress<TAddress>(
-        ref this SpanWriter<byte> writer,
-        TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
-    {
-        if (!address.TryFormat(writer.Free, out var n, default, default))
-            throw new InvalidOperationException(ExceptionMessages.SpanRoom);
-        writer.Position += n;
-    }
-
-    public static bool TryWriteIpAddress(
-        ref this SpanWriter<char> writer,
-        in IpAddress address)
-    {
-        if (!address.TryFormat(writer.Free, out var n, default, default))
-            return false;
-        writer.Position += n;
-        return true;
-    }
-
-    public static bool TryWriteIpAddress(
-        ref this SpanWriter<byte> writer,
-        in IpAddress address)
-    {
-        if (!address.TryFormat(writer.Free, out var n, default, default))
-            return false;
-        writer.Position += n;
-        return true;
-    }
-
-    public static bool TryWriteIpAddress<TAddress>(
-        ref this SpanWriter<char> writer,
-        TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
-    {
-        if (!address.TryFormat(writer.Free, out var n, default, default))
-            return false;
-        writer.Position += n;
-        return true;
-    }
-
-    public static bool TryWriteIpAddress<TAddress>(
-        ref this SpanWriter<byte> writer,
-        TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
-    {
-        if (!address.TryFormat(writer.Free, out var n, default, default))
-            return false;
-        writer.Position += n;
-        return true;
     }
 }

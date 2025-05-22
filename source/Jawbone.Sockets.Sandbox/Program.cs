@@ -2,21 +2,29 @@
 using Jawbone.Sockets;
 using System;
 
-IpAddressV6[] addresses =
-[
-    IpAddressV6.Local,
-    (IpAddressV6)IpAddressV4.Local,
-    (IpAddressV6)IpAddressV4.Broadcast,
-    IpAddressV6.Local
-];
+var input = "fe80::67c:1:fe0:b237%enp14s0";
+var address = Dns.GetAddressV6(input);
+Console.WriteLine(input);
+Console.WriteLine(address.ToString());
 
-addresses[^1].ScopeId = 127;
-foreach (var a in addresses)
-{
-    var text = a.ToString();
-    Console.WriteLine("string: " + text);
-    Console.WriteLine("parsed: " + IpAddressV6.Parse(text));
-}
+Console.WriteLine(IpAddressV4.Broadcast.OnPort(1000).ToString());
+Console.WriteLine(IpAddressV6.Local.OnPort(1000));
+
+// IpAddressV6[] addresses =
+// [
+//     IpAddressV6.Local,
+//     (IpAddressV6)IpAddressV4.Local,
+//     (IpAddressV6)IpAddressV4.Broadcast,
+//     IpAddressV6.Local
+// ];
+
+// addresses[^1].ScopeId = 127;
+// foreach (var a in addresses)
+// {
+//     var text = a.ToString();
+//     Console.WriteLine("string: " + text);
+//     Console.WriteLine("parsed: " + IpAddressV6.Parse(text));
+// }
 
 // var values = new byte[16];
 // values.AsSpan().Fill(byte.MaxValue);

@@ -6,9 +6,15 @@ using System.Runtime.InteropServices;
 namespace Jawbone.Sockets;
 
 [StructLayout(LayoutKind.Sequential)]
-public readonly struct NetworkPort : IEquatable<NetworkPort>, IParsable<NetworkPort>, ISpanParsable<NetworkPort>
+public struct NetworkPort :
+    IEquatable<NetworkPort>,
+    IParsable<NetworkPort>,
+    ISpanParsable<NetworkPort>,
+    IUtf8SpanParsable<NetworkPort>,
+    ISpanFormattable,
+    IUtf8SpanFormattable
 {
-    public readonly ushort NetworkValue { get; init; }
+    public ushort NetworkValue;
 
     public readonly ushort HostValue
     {
@@ -33,12 +39,45 @@ public readonly struct NetworkPort : IEquatable<NetworkPort>, IParsable<NetworkP
     public readonly override int GetHashCode() => NetworkValue.GetHashCode();
     public readonly override string ToString() => HostValue.ToString();
 
-    public static NetworkPort Parse(string s, IFormatProvider? provider)
+    public readonly bool TryFormat(
+        Span<byte> utf8Destination,
+        out int bytesWritten,
+        ReadOnlySpan<char> format = default,
+        IFormatProvider? provider = default)
+    {
+        return HostValue.TryFormat(
+            utf8Destination,
+            out bytesWritten,
+            format,
+            provider);
+    }
+
+    public readonly bool TryFormat(
+        Span<char> destination,
+        out int charsWritten,
+        ReadOnlySpan<char> format = default,
+        IFormatProvider? provider = default)
+    {
+        return HostValue.TryFormat(
+            destination,
+            out charsWritten,
+            format,
+            provider);
+    }
+
+    public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
+
+    public static NetworkPort Parse(
+        string s,
+        IFormatProvider? provider = default)
     {
         return new NetworkPort { HostValue = ushort.Parse(s) };
     }
 
-    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out NetworkPort result)
+    public static bool TryParse(
+        [NotNullWhen(true)] string? s,
+        IFormatProvider? provider,
+        out NetworkPort result)
     {
         if (ushort.TryParse(s, provider, out var hostValue))
         {
@@ -52,14 +91,57 @@ public readonly struct NetworkPort : IEquatable<NetworkPort>, IParsable<NetworkP
         }
     }
 
-    public static NetworkPort Parse(ReadOnlySpan<char> s, IFormatProvider? provider)
+    public static NetworkPort Parse(
+        ReadOnlySpan<char> s,
+        IFormatProvider? provider = default)
     {
         return new NetworkPort { HostValue = ushort.Parse(s) };
     }
 
-    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, [MaybeNullWhen(false)] out NetworkPort result)
+    public static bool TryParse(
+        ReadOnlySpan<char> s,
+        out NetworkPort result)
+    {
+        return TryParse(s, default, out result);
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<char> s,
+        IFormatProvider? provider,
+        out NetworkPort result)
     {
         if (ushort.TryParse(s, provider, out var hostValue))
+        {
+            result = new NetworkPort { HostValue = hostValue };
+            return true;
+        }
+        else
+        {
+            result = default;
+            return false;
+        }
+    }
+
+    public static NetworkPort Parse(
+        ReadOnlySpan<byte> utf8Text,
+        IFormatProvider? provider = default)
+    {
+        return new NetworkPort { HostValue = ushort.Parse(utf8Text) };
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<byte> utf8Text,
+        out NetworkPort result)
+    {
+        return TryParse(utf8Text, default, out result);
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<byte> utf8Text,
+        IFormatProvider? provider,
+        out NetworkPort result)
+    {
+        if (ushort.TryParse(utf8Text, provider, out var hostValue))
         {
             result = new NetworkPort { HostValue = hostValue };
             return true;

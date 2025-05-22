@@ -49,6 +49,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
 
     public static IpAddressV6 Any => default;
     public static IpAddressV6 Local { get; } = CreateLocal();
+    public static IpAddressVersion Version => IpAddressVersion.V6;
 
     private static readonly uint PrefixV4 = BitConverter.IsLittleEndian ? 0xffff0000 : 0x0000ffff;
 
@@ -124,7 +125,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
     public override readonly string ToString()
     {
         Span<char> buffer = stackalloc char[64];
-        TryFormat(buffer, out var n, default, default);
+        _ = TryFormat(buffer, out var n);
         return buffer[..n].ToString();
     }
 
@@ -139,7 +140,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         {
             var success =
                 writer.TryWrite("::ffff:"u8) &&
-                writer.TryWriteIpAddress(new IpAddressV4(DataU32[3]));
+                writer.TryWriteFormattable(new IpAddressV4(DataU32[3]));
 
             bytesWritten = writer.Position;
             return success;
@@ -186,14 +187,14 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         {
             result =
                 writer.TryWrite((byte)'%') &&
-                writer.TryWriteBase10(ScopeId);
+                writer.TryWriteFormattable(ScopeId);
         }
 
         bytesWritten = writer.Position;
         return result;
     }
 
-    public readonly bool TryFormat(Span<byte> utf8Destination, out int bytesWritten) => TryFormat(utf8Destination, out bytesWritten);
+    public readonly bool TryFormat(Span<byte> utf8Destination, out int bytesWritten) => TryFormat(utf8Destination, out bytesWritten, default, default);
 
     public readonly bool TryFormat(
         Span<char> destination,
@@ -206,7 +207,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         {
             var success =
                 writer.TryWrite("::ffff:") &&
-                writer.TryWriteIpAddress(new IpAddressV4(DataU32[3]));
+                writer.TryWriteFormattable(new IpAddressV4(DataU32[3]));
 
             charsWritten = writer.Position;
             return success;
@@ -253,14 +254,14 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         {
             result =
                 writer.TryWrite('%') &&
-                writer.TryWriteBase10(ScopeId);
+                writer.TryWriteFormattable(ScopeId);
         }
 
         charsWritten = writer.Position;
         return result;
     }
 
-    public readonly bool TryFormat(Span<char> destination, out int charsWritten) => TryFormat(destination, out charsWritten);
+    public readonly bool TryFormat(Span<char> destination, out int charsWritten) => TryFormat(destination, out charsWritten, default, default);
 
     public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
 
@@ -472,7 +473,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
 
     public static IpAddressV6 Parse(ReadOnlySpan<char> s) => Parse(s, null);
 
-    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, [MaybeNullWhen(false)] out IpAddressV6 result)
+    public static bool TryParse(ReadOnlySpan<char> s, IFormatProvider? provider, out IpAddressV6 result)
     {
         return DoTheParse(s, false, out result);
     }
@@ -486,10 +487,225 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         return result;
     }
 
-    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, [MaybeNullWhen(false)] out IpAddressV6 result)
+    public static bool TryParse([NotNullWhen(true)] string? s, IFormatProvider? provider, out IpAddressV6 result)
     {
         return DoTheParse(s, false, out result);
     }
+
+    private static bool DoTheParse(ReadOnlySpan<byte> originalInput, bool throwException, out IpAddressV6 result)
+    {
+        const string BadHexBlock = "Bad hex block.";
+        if (originalInput.IsEmpty)
+        {
+            Throw("Input string is empty.");
+            result = default;
+            return false;
+        }
+
+        var s = originalInput;
+
+        {
+            var hasOpeningBracket = s[0] == '[';
+            var hasClosingBracket = s[^1] == ']';
+
+            if (hasOpeningBracket != hasClosingBracket)
+            {
+                Throw(hasOpeningBracket ? "Missing closing bracket." : "Missing opening bracket.");
+                result = default;
+                return false;
+            }
+
+            if (hasOpeningBracket)
+                s = s[1..^1];
+        }
+
+        if (s.Length < 2)
+        {
+            Throw("Input string too short.");
+            result = default;
+            return false;
+        }
+
+        // TODO: Make this properly flexible.
+        // This would still miss plenty of other valid representations
+        // for IPv4-mapped addresses, but for now, it is consistent
+        // with how IpAddressV6 converts such addresses to strings.
+        var IntroV4 = "::ffff:"u8;
+        if (s.StartsWith(IntroV4) && IpAddressV4.TryParse(s[IntroV4.Length..], null, out var a32))
+        {
+            result = (IpAddressV6)a32;
+            return true;
+        }
+
+        var scopeId = default(uint);
+        {
+            var scopeIndex = s.LastIndexOf((byte)'%');
+            if (0 <= scopeIndex)
+            {
+                if (!uint.TryParse(s.Slice(scopeIndex + 1), out scopeId))
+                {
+                    Throw("Invalid scope ID.");
+                    result = default;
+                    return false;
+                }
+
+                s = s[..scopeIndex];
+            }
+        }
+
+        var blocks = default(ArrayU16);
+        var division = s.IndexOf("::"u8);
+
+        if (0 <= division)
+        {
+            if (!TryParseHexBlocks(s[..division], blocks, out var leftBlocksWritten))
+            {
+                Throw(BadHexBlock);
+                result = default;
+                return false;
+            }
+
+            if (!TryParseHexBlocks(s[(division + 2)..], blocks[leftBlocksWritten..], out var rightBlocksWritten))
+            {
+                Throw(BadHexBlock);
+                result = default;
+                return false;
+            }
+
+            if (leftBlocksWritten + rightBlocksWritten == ArrayU16.Length)
+            {
+                Throw("Malformed representation.");
+                result = default;
+                return false;
+            }
+
+            var end = leftBlocksWritten + rightBlocksWritten;
+            blocks[leftBlocksWritten..end].CopyTo(blocks[^rightBlocksWritten..]);
+            blocks[leftBlocksWritten..^rightBlocksWritten].Clear();
+        }
+        else if (!TryParseHexBlocks(s, blocks, out var blocksWritten) || blocksWritten < ArrayU16.Length)
+        {
+            Throw(BadHexBlock);
+            result = default;
+            return false;
+        }
+
+        result = default;
+        result.DataU16 = blocks;
+        result.ScopeId = scopeId;
+
+        if (BitConverter.IsLittleEndian)
+        {
+            foreach (ref var n in result.DataU16)
+                n = BinaryPrimitives.ReverseEndianness(n);
+        }
+        return true;
+
+        void Throw(string message)
+        {
+            if (throwException)
+                throw new FormatException(message);
+        }
+
+        static bool TryParseHexBlocks(ReadOnlySpan<byte> s, Span<ushort> blocks, out int blocksWritten)
+        {
+            blocksWritten = 0;
+
+            if (s.IsEmpty)
+                return true;
+
+            var index = ParseHexBlock(s, out var block);
+            if (index == 0)
+                return false;
+
+            blocks[0] = block;
+            blocksWritten = 1;
+
+            while (blocksWritten < blocks.Length)
+            {
+                if (index == s.Length)
+                    return true;
+
+                if (s[index] != ':')
+                    return false;
+
+                var length = ParseHexBlock(s[++index..], out block);
+
+                if (length == 0)
+                    return false;
+
+                blocks[blocksWritten++] = block;
+                index += length;
+            }
+
+            return index == s.Length;
+        }
+
+        static int ParseHexBlock(ReadOnlySpan<byte> s, out ushort u16)
+        {
+            if (s.IsEmpty)
+            {
+                u16 = default;
+                return 0;
+            }
+
+            int result = HexDigit(s[0]);
+
+            if (result == -1)
+            {
+                u16 = default;
+                return 0;
+            }
+
+            int digitCount = 1;
+
+            while (digitCount < s.Length)
+            {
+                var nextDigit = HexDigit(s[digitCount]);
+
+                if (nextDigit == -1)
+                    break;
+
+                if (4 < ++digitCount)
+                {
+                    u16 = default;
+                    return 0;
+                }
+
+                result = (result << 4) | nextDigit;
+            }
+
+            u16 = (ushort)result;
+            return digitCount;
+        }
+
+        static int HexDigit(int c)
+        {
+            if ('0' <= c && c <= '9')
+                return c - '0';
+            if ('a' <= c && c <= 'f')
+                return c - 'a' + 10;
+            if ('A' <= c && c <= 'F')
+                return c - 'A' + 10;
+
+            return -1;
+        }
+    }
+
+    public static IpAddressV6 Parse(ReadOnlySpan<byte> s, IFormatProvider? provider)
+    {
+        DoTheParse(s, true, out var result);
+        return result;
+    }
+
+    public static IpAddressV6 Parse(ReadOnlySpan<byte> s) => Parse(s, null);
+
+    public static bool TryParse(ReadOnlySpan<byte> s, IFormatProvider? provider, out IpAddressV6 result)
+    {
+        return DoTheParse(s, false, out result);
+    }
+
+    public static bool TryParse(ReadOnlySpan<byte> s, out IpAddressV6 result) => TryParse(s, null, out result);
 
     public static bool operator ==(IpAddressV6 a, IpAddressV6 b) => a.Equals(b);
     public static bool operator !=(IpAddressV6 a, IpAddressV6 b) => !a.Equals(b);

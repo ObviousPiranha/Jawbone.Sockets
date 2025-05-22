@@ -20,13 +20,15 @@ public class IpAddressTest
         Assert.Equal(2, Unsafe.SizeOf<NetworkPort>());
         Assert.Equal(4, Unsafe.SizeOf<IpAddressV4>());
         Assert.Equal(20, Unsafe.SizeOf<IpAddressV6>());
+        Assert.Equal(8, Unsafe.SizeOf<IpEndpoint<IpAddressV4>>());
+        Assert.Equal(24, Unsafe.SizeOf<IpEndpoint<IpAddressV6>>());
 
         Assert.True(IpAddressV4.Local.IsLoopback);
         Assert.True(IpAddressV6.Local.IsLoopback);
         var debug = IpAddressV6.Local.ToString();
 
-        Assert.Throws<ArgumentNullException>(() => IpAddressV4.Parse(null!, null));
-        Assert.Throws<ArgumentNullException>(() => IpAddressV6.Parse(null!, null));
+        Assert.Throws<ArgumentNullException>(() => IpAddressV4.Parse(default(string)!, null));
+        Assert.Throws<ArgumentNullException>(() => IpAddressV6.Parse(default(string)!, null));
     }
 
     [Theory]
@@ -58,7 +60,7 @@ public class IpAddressTest
     }
 
     [Theory]
-    [MemberData(nameof(RoundTripParse32))]
+    [MemberData(nameof(RoundTripParseV4))]
     public void AddressV4_RoundTripParseString(Serializable<IpAddressV4> expected)
     {
         var asString = expected.ToString();
@@ -67,7 +69,7 @@ public class IpAddressTest
     }
 
     [Theory]
-    [MemberData(nameof(RoundTripParse32))]
+    [MemberData(nameof(RoundTripParseV4))]
     public void AddressV4_RoundTripParseSpan(Serializable<IpAddressV4> expected)
     {
         var asString = expected.ToString();
@@ -76,7 +78,7 @@ public class IpAddressTest
     }
 
     [Theory]
-    [MemberData(nameof(RoundTripParse32))]
+    [MemberData(nameof(RoundTripParseV4))]
     public void AddressV4_RoundTripTryParseString(Serializable<IpAddressV4> expected)
     {
         var asString = expected.ToString();
@@ -85,11 +87,31 @@ public class IpAddressTest
     }
 
     [Theory]
-    [MemberData(nameof(RoundTripParse32))]
+    [MemberData(nameof(RoundTripParseV4))]
     public void AddressV4_RoundTripTryParseSpan(Serializable<IpAddressV4> expected)
     {
         var asString = expected.ToString();
         Assert.True(IpAddressV4.TryParse(asString.AsSpan(), null, out var actual));
+        Assert.Equal(expected.Value, actual);
+    }
+
+    [Theory]
+    [MemberData(nameof(RoundTripParseV4))]
+    public void AddressV4_RoundTripParseUtf8Span(Serializable<IpAddressV4> expected)
+    {
+        Span<byte> buffer = new byte[64];
+        Assert.True(expected.Value.TryFormat(buffer, out var n));
+        var actual = IpAddressV4.Parse(buffer[..n]);
+        Assert.Equal(expected.Value, actual);
+    }
+
+    [Theory]
+    [MemberData(nameof(RoundTripParseV4))]
+    public void AddressV4_RoundTripTryParseUtf8Span(Serializable<IpAddressV4> expected)
+    {
+        Span<byte> buffer = new byte[64];
+        Assert.True(expected.Value.TryFormat(buffer, out var n));
+        Assert.True(IpAddressV4.TryParse(buffer[..n], out var actual));
         Assert.Equal(expected.Value, actual);
     }
 
@@ -110,7 +132,16 @@ public class IpAddressTest
     }
 
     [Theory]
-    [MemberData(nameof(RoundTripParse128))]
+    [InlineData("127.000.000.001", "127.0.0.1")]
+    public void AddressV4_UnusualFormat_ParsesSuccessfully(string input, string expectedCanonical)
+    {
+        var address = IpAddressV4.Parse(input);
+        var actualCanonical = address.ToString();
+        Assert.Equal(expectedCanonical, actualCanonical);
+    }
+
+    [Theory]
+    [MemberData(nameof(RoundTripParseV6))]
     public void AddressV6_RoundTripParseString(Serializable<IpAddressV6> expected)
     {
         var asString = expected.ToString();
@@ -119,7 +150,7 @@ public class IpAddressTest
     }
 
     [Theory]
-    [MemberData(nameof(RoundTripParse128))]
+    [MemberData(nameof(RoundTripParseV6))]
     public void AddressV6_RoundTripParseSpan(Serializable<IpAddressV6> expected)
     {
         var asString = expected.ToString();
@@ -128,7 +159,7 @@ public class IpAddressTest
     }
 
     [Theory]
-    [MemberData(nameof(RoundTripParse128))]
+    [MemberData(nameof(RoundTripParseV6))]
     public void AddressV6_RoundTripTryParseString(Serializable<IpAddressV6> expected)
     {
         var asString = expected.ToString();
@@ -137,11 +168,31 @@ public class IpAddressTest
     }
 
     [Theory]
-    [MemberData(nameof(RoundTripParse128))]
+    [MemberData(nameof(RoundTripParseV6))]
     public void AddressV6_RoundTripTryParseSpan(Serializable<IpAddressV6> expected)
     {
         var asString = expected.ToString();
         Assert.True(IpAddressV6.TryParse(asString.AsSpan(), null, out var actual));
+        Assert.Equal(expected.Value, actual);
+    }
+
+    [Theory]
+    [MemberData(nameof(RoundTripParseV6))]
+    public void AddressV6_RoundTripParseUtf8Span(Serializable<IpAddressV6> expected)
+    {
+        Span<byte> buffer = new byte[64];
+        Assert.True(expected.Value.TryFormat(buffer, out var n));
+        var actual = IpAddressV6.Parse(buffer[..n]);
+        Assert.Equal(expected.Value, actual);
+    }
+
+    [Theory]
+    [MemberData(nameof(RoundTripParseV6))]
+    public void AddressV6_RoundTripTryParseUtf8Span(Serializable<IpAddressV6> expected)
+    {
+        Span<byte> buffer = new byte[64];
+        Assert.True(expected.Value.TryFormat(buffer, out var n));
+        Assert.True(IpAddressV6.TryParse(buffer[..n], out var actual));
         Assert.Equal(expected.Value, actual);
     }
 
@@ -158,6 +209,18 @@ public class IpAddressTest
         Assert.True(result.IsDefault);
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(s, null));
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(s.AsSpan(), null));
+    }
+
+    [Theory]
+    [InlineData("0001::0001", "1::1")]
+    [InlineData("1:0:0:0:0:0:0:2", "1::2")]
+    [InlineData("1::2:0:0:0:0:3", "1:0:2::3")]
+    [InlineData("1:0000:2:0:0:0:0:3", "1:0:2::3")]
+    public void AddressV6_UnusualFormat_ParsesSuccessfully(string input, string expectedCanonical)
+    {
+        var address = IpAddressV6.Parse(input);
+        var actualCanonical = address.ToString();
+        Assert.Equal(expectedCanonical, actualCanonical);
     }
 
     public static TheoryData<Serializable<IpAddressV4>> LinkLocal32 => new()
@@ -186,16 +249,21 @@ public class IpAddressTest
         Create(static span => span.Fill(0xab))
     };
 
-    public static TheoryData<Serializable<IpAddressV4>> RoundTripParse32 => new()
+    public static TheoryData<Serializable<IpAddressV4>> RoundTripParseV4 => new()
     {
+        IpAddressV4.Any,
         IpAddressV4.Local,
         IpAddressV4.Broadcast,
         new IpAddressV4(192, 168, 0, 1),
-        new IpAddressV4(0, 1, 2, 3)
+        new IpAddressV4(0, 1, 2, 3),
+        new IpAddressV4(10, 0, 0, 1),
+        new IpAddressV4(1, 1, 1, 1),
+        new IpAddressV4(172, 16, 254, 1)
     };
 
-    public static TheoryData<Serializable<IpAddressV6>> RoundTripParse128 => new()
+    public static TheoryData<Serializable<IpAddressV6>> RoundTripParseV6 => new()
     {
+        IpAddressV6.Any,
         IpAddressV6.Local,
         Create(static span => span.Fill(0xab)),
         Create(static span =>

@@ -25,7 +25,7 @@ public struct IpEndpoint : IEquatable<IpEndpoint>, ISpanFormattable, IUtf8SpanFo
     public readonly override string ToString()
     {
         Span<char> buffer = stackalloc char[64];
-        _ = TryFormat(buffer, out var n, default, default);
+        _ = TryFormat(buffer, out var n);
         return buffer[..n].ToString();
     }
 
@@ -67,35 +67,51 @@ public struct IpEndpoint : IEquatable<IpEndpoint>, ISpanFormattable, IUtf8SpanFo
     public readonly bool TryFormat(
         Span<byte> utf8Destination,
         out int bytesWritten,
-        ReadOnlySpan<char> format,
-        IFormatProvider? provider)
+        ReadOnlySpan<char> format = default,
+        IFormatProvider? provider = default)
     {
-        var writer = SpanWriter.Create(utf8Destination);
-        var result =
-            writer.TryWrite((byte)'[') &&
-            writer.TryWriteIpAddress(Address) &&
-            writer.TryWrite((byte)']') &&
-            writer.TryWrite((byte)':') &&
-            writer.TryWriteBase10(Port.HostValue);
-        bytesWritten = writer.Position;
-        return result;
+        if (Address.Version == IpAddressVersion.V4)
+        {
+            return Address.AsV4().OnPort(Port).TryFormat(utf8Destination, out bytesWritten, format, provider);
+        }
+        else if (Address.Version == IpAddressVersion.V6)
+        {
+            return Address.AsV6().OnPort(Port).TryFormat(utf8Destination, out bytesWritten, format, provider);
+        }
+        else
+        {
+            var writer = SpanWriter.Create(utf8Destination);
+            var result =
+                writer.TryWrite((byte)':') &&
+                writer.TryWriteFormattable(Port.HostValue);
+            bytesWritten = writer.Position;
+            return result;
+        }
     }
 
     public readonly bool TryFormat(
         Span<char> destination,
         out int charsWritten,
-        ReadOnlySpan<char> format,
-        IFormatProvider? provider)
+        ReadOnlySpan<char> format = default,
+        IFormatProvider? provider = default)
     {
-        var writer = SpanWriter.Create(destination);
-        var result =
-            writer.TryWrite('[') &&
-            writer.TryWriteIpAddress(Address) &&
-            writer.TryWrite(']') &&
-            writer.TryWrite(':') &&
-            writer.TryWriteBase10(Port.HostValue);
-        charsWritten = writer.Position;
-        return result;
+        if (Address.Version == IpAddressVersion.V4)
+        {
+            return Address.AsV4().OnPort(Port).TryFormat(destination, out charsWritten, format, provider);
+        }
+        else if (Address.Version == IpAddressVersion.V6)
+        {
+            return Address.AsV6().OnPort(Port).TryFormat(destination, out charsWritten, format, provider);
+        }
+        else
+        {
+            var writer = SpanWriter.Create(destination);
+            var result =
+                writer.TryWrite(':') &&
+                writer.TryWriteFormattable(Port.HostValue);
+            charsWritten = writer.Position;
+            return result;
+        }
     }
 
     public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
@@ -107,6 +123,7 @@ public struct IpEndpoint<TAddress> : IEquatable<IpEndpoint<TAddress>>, ISpanForm
 {
     public TAddress Address;
     public NetworkPort Port;
+    private readonly ushort _padding;
     public readonly bool IsDefault => Address.IsDefault && Port.NetworkValue == 0;
 
     public IpEndpoint(TAddress address, NetworkPort port)
@@ -125,23 +142,33 @@ public struct IpEndpoint<TAddress> : IEquatable<IpEndpoint<TAddress>>, ISpanForm
     public override readonly string ToString()
     {
         Span<char> buffer = stackalloc char[64];
-        _ = TryFormat(buffer, out var n, default, default);
+        _ = TryFormat(buffer, out var n);
         return buffer[..n].ToString();
     }
 
     public readonly bool TryFormat(
         Span<byte> utf8Destination,
         out int bytesWritten,
-        ReadOnlySpan<char> format,
-        IFormatProvider? provider)
+        ReadOnlySpan<char> format = default,
+        IFormatProvider? provider = default)
     {
         var writer = SpanWriter.Create(utf8Destination);
-        var result =
-            writer.TryWrite((byte)'[') &&
-            writer.TryWriteIpAddress(Address) &&
-            writer.TryWrite((byte)']') &&
+        bool result;
+        if (Address is IpAddressV6)
+        {
+            result =
+                writer.TryWrite((byte)'[') &&
+                writer.TryWriteFormattable(Address) &&
+                writer.TryWrite((byte)']');
+        }
+        else
+        {
+            result = writer.TryWriteFormattable(Address);
+        }
+
+        result = result &&
             writer.TryWrite((byte)':') &&
-            writer.TryWriteBase10(Port.HostValue);
+            writer.TryWriteFormattable(Port.HostValue);
         bytesWritten = writer.Position;
         return result;
     }
@@ -149,16 +176,26 @@ public struct IpEndpoint<TAddress> : IEquatable<IpEndpoint<TAddress>>, ISpanForm
     public readonly bool TryFormat(
         Span<char> destination,
         out int charsWritten,
-        ReadOnlySpan<char> format,
-        IFormatProvider? provider)
+        ReadOnlySpan<char> format = default,
+        IFormatProvider? provider = default)
     {
         var writer = SpanWriter.Create(destination);
-        var result =
-            writer.TryWrite('[') &&
-            writer.TryWriteIpAddress(Address) &&
-            writer.TryWrite(']') &&
+        bool result;
+        if (Address is IpAddressV6)
+        {
+            result =
+                writer.TryWrite('[') &&
+                writer.TryWriteFormattable(Address) &&
+                writer.TryWrite(']');
+        }
+        else
+        {
+            result = writer.TryWriteFormattable(Address);
+        }
+
+        result = result &&
             writer.TryWrite(':') &&
-            writer.TryWriteBase10(Port.HostValue);
+            writer.TryWriteFormattable(Port.HostValue);
         charsWritten = writer.Position;
         return result;
     }

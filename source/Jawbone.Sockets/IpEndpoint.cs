@@ -21,13 +21,7 @@ public struct IpEndpoint : IEquatable<IpEndpoint>, ISpanFormattable, IUtf8SpanFo
     public readonly bool Equals(IpEndpoint other) => Address.Equals(other.Address) && Port.Equals(other.Port);
     public readonly override bool Equals(object? obj) => obj is IpEndpoint other && Equals(other);
     public readonly override int GetHashCode() => HashCode.Combine(Address, Port);
-
-    public readonly override string ToString()
-    {
-        Span<char> buffer = stackalloc char[64];
-        _ = TryFormat(buffer, out var n);
-        return buffer[..n].ToString();
-    }
+    public override readonly string ToString() => SpanWriter.GetString(this);
 
     internal readonly IpEndpoint<IpAddressV4> AsV4() => Address.AsV4().OnPort(Port);
     internal readonly IpEndpoint<IpAddressV6> AsV6() => Address.AsV6().OnPort(Port);
@@ -139,12 +133,7 @@ public struct IpEndpoint<TAddress> : IEquatable<IpEndpoint<TAddress>>, ISpanForm
     public readonly bool Equals(IpEndpoint<TAddress> other) => Address.Equals(other.Address) && Port.Equals(other.Port);
     public override readonly bool Equals(object? obj) => obj is IpEndpoint<TAddress> other && Equals(other);
     public override readonly int GetHashCode() => HashCode.Combine(Address, Port);
-    public override readonly string ToString()
-    {
-        Span<char> buffer = stackalloc char[64];
-        _ = TryFormat(buffer, out var n);
-        return buffer[..n].ToString();
-    }
+    public override readonly string ToString() => SpanWriter.GetString(this);
 
     public readonly bool TryFormat(
         Span<byte> utf8Destination,

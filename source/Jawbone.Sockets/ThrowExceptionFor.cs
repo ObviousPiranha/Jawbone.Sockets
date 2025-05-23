@@ -22,4 +22,11 @@ static class ThrowExceptionFor
     {
         throw new InvalidOperationException("Unexpected poll event state.");
     }
+
+    [DoesNotReturn]
+    public static void InvalidNetwork<TAddress>(TAddress address, int prefixLength)
+        where TAddress : unmanaged, IIpAddress<TAddress>
+    {
+        throw new ArgumentException($"Invalid mask address: {address}/{prefixLength}");
+    }
 }

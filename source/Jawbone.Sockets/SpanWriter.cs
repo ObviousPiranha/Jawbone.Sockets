@@ -78,4 +78,11 @@ static class SpanWriter
         writer.Position += charsWritten;
         return result;
     }
+
+    public static string GetString<T>(T item, int bufferSize = 64) where T : ISpanFormattable
+    {
+        Span<char> buffer = stackalloc char[bufferSize];
+        _ = item.TryFormat(buffer, out var n, default, default);
+        return buffer[..n].ToString();
+    }
 }

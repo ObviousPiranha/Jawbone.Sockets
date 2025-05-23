@@ -17,11 +17,11 @@ public class IpAddressTest
     [Fact]
     public void AddressInvariants()
     {
-        Assert.Equal(2, Unsafe.SizeOf<NetworkPort>());
-        Assert.Equal(4, Unsafe.SizeOf<IpAddressV4>());
-        Assert.Equal(20, Unsafe.SizeOf<IpAddressV6>());
-        Assert.Equal(8, Unsafe.SizeOf<IpEndpoint<IpAddressV4>>());
-        Assert.Equal(24, Unsafe.SizeOf<IpEndpoint<IpAddressV6>>());
+        AssertSize<NetworkPort>(2);
+        AssertSize<IpAddressV4>(4);
+        AssertSize<IpAddressV6>(20);
+        AssertSize<IpEndpoint<IpAddressV4>>(8);
+        AssertSize<IpEndpoint<IpAddressV6>>(24);
 
         Assert.True(IpAddressV4.Local.IsLoopback);
         Assert.True(IpAddressV6.Local.IsLoopback);
@@ -29,6 +29,11 @@ public class IpAddressTest
 
         Assert.Throws<ArgumentNullException>(() => IpAddressV4.Parse(default(string)!, null));
         Assert.Throws<ArgumentNullException>(() => IpAddressV6.Parse(default(string)!, null));
+
+        static void AssertSize<T>(int size) where T : unmanaged
+        {
+            Assert.Equal(size, Unsafe.SizeOf<T>());
+        }
     }
 
     [Theory]

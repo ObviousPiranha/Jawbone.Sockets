@@ -10,6 +10,7 @@ namespace Jawbone.Sockets;
 [StructLayout(LayoutKind.Explicit, Size = 20, Pack = 4)]
 public struct IpAddressV6 : IIpAddress<IpAddressV6>
 {
+#pragma warning disable IDE0044
     [StructLayout(LayoutKind.Sequential)]
     [InlineArray(Length)]
     public struct ArrayU8
@@ -33,6 +34,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         public const int Length = 4;
         private uint _first;
     }
+#pragma warning restore IDE0044
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint LinkLocalMask() => BitConverter.IsLittleEndian ? 0x0000c0ff : 0xffc00000;
@@ -95,6 +97,20 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         ScopeId = scopeId;
     }
 
+    private readonly void GetU128(out UInt128 u128) => u128 = BitConverter.ToUInt128(DataU8);
+
+    public readonly bool IsInNetwork(IpNetwork<IpAddressV6> ipNetwork)
+    {
+        if (ipNetwork.PrefixLength == 0)
+            return true;
+        GetU128(out var address);
+        ipNetwork.BaseAddress.GetU128(out var baseAddress);
+        var mask = UInt128.MaxValue << (128 - ipNetwork.PrefixLength);
+        if (BitConverter.IsLittleEndian)
+            mask = BinaryPrimitives.ReverseEndianness(mask);
+        return (address & mask) == baseAddress;
+    }
+
     public readonly bool TryMapV4(out IpAddressV4 address)
     {
         if (IsV4Mapped)
@@ -122,12 +138,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
     public override readonly bool Equals([NotNullWhen(true)] object? obj)
         => obj is IpAddressV6 other && Equals(other);
     public override readonly int GetHashCode() => HashCode.Combine(DataU32[0], DataU32[1], DataU32[2], DataU32[3], ScopeId);
-    public override readonly string ToString()
-    {
-        Span<char> buffer = stackalloc char[64];
-        _ = TryFormat(buffer, out var n);
-        return buffer[..n].ToString();
-    }
+    public override readonly string ToString() => SpanWriter.GetString(this);
 
     public readonly bool TryFormat(
         Span<byte> utf8Destination,
@@ -265,7 +276,10 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
 
     public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
 
-    private static bool DoTheParse(ReadOnlySpan<char> originalInput, bool throwException, out IpAddressV6 result)
+    private static bool DoTheParse(
+        ReadOnlySpan<char> originalInput,
+        bool throwException,
+        out IpAddressV6 result)
     {
         const string BadHexBlock = "Bad hex block.";
         if (originalInput.IsEmpty)
@@ -492,7 +506,10 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         return DoTheParse(s, false, out result);
     }
 
-    private static bool DoTheParse(ReadOnlySpan<byte> originalInput, bool throwException, out IpAddressV6 result)
+    private static bool DoTheParse(
+        ReadOnlySpan<byte> originalInput,
+        bool throwException,
+        out IpAddressV6 result)
     {
         const string BadHexBlock = "Bad hex block.";
         if (originalInput.IsEmpty)
@@ -706,6 +723,21 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
     }
 
     public static bool TryParse(ReadOnlySpan<byte> s, out IpAddressV6 result) => TryParse(s, null, out result);
+
+    public static IpNetwork<IpAddressV6> CreateNetwork(IpAddressV6 address, int prefixLength)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(prefixLength);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(prefixLength, 128);
+        address.GetU128(out var baseAddress);
+        if (prefixLength == 0 && baseAddress != UInt128.Zero)
+            ThrowExceptionFor.InvalidNetwork(address, prefixLength);
+        var mask = UInt128.MaxValue << (128 - prefixLength);
+        if (BitConverter.IsLittleEndian)
+            mask = BinaryPrimitives.ReverseEndianness(mask);
+        if ((baseAddress & mask) != baseAddress)
+            ThrowExceptionFor.InvalidNetwork(address, prefixLength);
+        return new(address, prefixLength);
+    }
 
     public static bool operator ==(IpAddressV6 a, IpAddressV6 b) => a.Equals(b);
     public static bool operator !=(IpAddressV6 a, IpAddressV6 b) => !a.Equals(b);

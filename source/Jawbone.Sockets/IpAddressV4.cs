@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -8,6 +9,7 @@ namespace Jawbone.Sockets;
 [StructLayout(LayoutKind.Explicit, Size = 4, Pack = 4)]
 public struct IpAddressV4 : IIpAddress<IpAddressV4>
 {
+#pragma warning disable IDE0044
     [StructLayout(LayoutKind.Sequential)]
     [InlineArray(Length)]
     public struct ArrayU8
@@ -23,6 +25,7 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
         public const int Length = 2;
         private ushort _first;
     }
+#pragma warning restore IDE0044
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint LinkLocalMask() => BitConverter.IsLittleEndian ? 0x0000ffff : 0xffff0000;
@@ -69,16 +72,22 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
 
     public IpAddressV4(uint address) => DataU32 = address;
 
+    public readonly bool IsInNetwork(IpNetwork<IpAddressV4> ipNetwork)
+    {
+        if (ipNetwork.PrefixLength == 0)
+            return true;
+        var mask = uint.MaxValue << (32 - ipNetwork.PrefixLength);
+        if (BitConverter.IsLittleEndian)
+            mask = BinaryPrimitives.ReverseEndianness(mask);
+        var result = (DataU32 & mask) == ipNetwork.BaseAddress.DataU32;
+        return result;
+    }
+
     public readonly bool Equals(IpAddressV4 other) => DataU32 == other.DataU32;
     public override readonly bool Equals([NotNullWhen(true)] object? obj)
         => obj is IpAddressV4 other && Equals(other);
     public override readonly int GetHashCode() => DataU32.GetHashCode();
-    public override readonly string ToString()
-    {
-        Span<char> buffer = stackalloc char[16];
-        _ = TryFormat(buffer, out var n);
-        return buffer[..n].ToString();
-    }
+    public override readonly string ToString() => SpanWriter.GetString(this);
 
     public readonly bool TryFormat(
         Span<byte> utf8Destination,
@@ -124,7 +133,10 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
 
     public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
 
-    private static bool DoTheParse(ReadOnlySpan<char> s, bool throwException, out IpAddressV4 result)
+    private static bool DoTheParse(
+        ReadOnlySpan<char> s,
+        bool throwException,
+        out IpAddressV4 result)
     {
         // TODO: Support atypical formats.
         // https://en.wikipedia.org/wiki/Internet_Protocol_version_4#Address_representations
@@ -235,7 +247,10 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
         return TryParse(s.AsSpan(), provider, out result);
     }
 
-    private static bool DoTheParse(ReadOnlySpan<byte> s, bool throwException, out IpAddressV4 result)
+    private static bool DoTheParse(
+        ReadOnlySpan<byte> s,
+        bool throwException,
+        out IpAddressV4 result)
     {
         // TODO: Support atypical formats.
         // https://en.wikipedia.org/wiki/Internet_Protocol_version_4#Address_representations
@@ -334,6 +349,18 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
     }
 
     public static bool TryParse(ReadOnlySpan<byte> utf8Text, out IpAddressV4 result) => TryParse(utf8Text, null, out result);
+
+    public static IpNetwork<IpAddressV4> CreateNetwork(IpAddressV4 address, int prefixLength)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(prefixLength);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(prefixLength, 32);
+        var mask = (uint)((long)uint.MaxValue << (32 - prefixLength));
+        if (BitConverter.IsLittleEndian)
+            mask = BinaryPrimitives.ReverseEndianness(mask);
+        if ((address.DataU32 & mask) != address.DataU32)
+            ThrowExceptionFor.InvalidNetwork(address, prefixLength);
+        return new(address, prefixLength);
+    }
 
     private static bool IsDigit(int c) => '0' <= c && c <= '9';
 

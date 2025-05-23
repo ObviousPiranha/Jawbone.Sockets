@@ -3,7 +3,7 @@ using System;
 namespace Jawbone.Sockets;
 
 [Flags]
-public enum SocketOptions
+/* public */ enum SocketOptions
 {
     None,
     DoNotReuseAddress = 1 << 0,

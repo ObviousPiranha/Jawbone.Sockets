@@ -71,7 +71,7 @@ public struct NetworkPort :
         string s,
         IFormatProvider? provider = default)
     {
-        return new NetworkPort { HostValue = ushort.Parse(s) };
+        return new NetworkPort { HostValue = ushort.Parse(s, provider) };
     }
 
     public static bool TryParse(
@@ -95,7 +95,7 @@ public struct NetworkPort :
         ReadOnlySpan<char> s,
         IFormatProvider? provider = default)
     {
-        return new NetworkPort { HostValue = ushort.Parse(s) };
+        return new NetworkPort { HostValue = ushort.Parse(s, provider) };
     }
 
     public static bool TryParse(
@@ -126,7 +126,7 @@ public struct NetworkPort :
         ReadOnlySpan<byte> utf8Text,
         IFormatProvider? provider = default)
     {
-        return new NetworkPort { HostValue = ushort.Parse(utf8Text) };
+        return new NetworkPort { HostValue = ushort.Parse(utf8Text, provider) };
     }
 
     public static bool TryParse(

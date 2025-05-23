@@ -20,6 +20,20 @@ public readonly struct IpAddress : IEquatable<IpAddress>, ISpanFormattable, IUtf
         _storage = address;
     }
 
+    public readonly bool IsV4(out IpAddressV4 address)
+    {
+        var result = Version == IpAddressVersion.V4;
+        address = result ? AsV4() : default;
+        return result;
+    }
+
+    public readonly bool IsV6(out IpAddressV6 address)
+    {
+        var result = Version == IpAddressVersion.V6;
+        address = result ? AsV6() : default;
+        return result;
+    }
+
     internal readonly IpAddressV4 AsV4() => new(_storage.DataU32[0]);
     internal readonly IpAddressV6 AsV6() => _storage;
 

@@ -39,6 +39,8 @@ ref struct SpanWriter<T>
         return true;
     }
 
+    public bool TryWriteIf(bool condition, T item) => !condition || TryWrite(item);
+
     public void Write(T item)
     {
         Span[_position] = item;

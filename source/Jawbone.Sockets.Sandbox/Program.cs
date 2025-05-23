@@ -3,8 +3,10 @@ using Jawbone.Sockets;
 using System;
 
 {
-    var address = IpAddressV4.Parse("255.255.255.255");
-    Console.WriteLine(address);
+    var e4 = IpAddressV4.Local.OnPort(5555);
+    var e6 = IpAddressV6.Local.OnPort(5555);
+    Console.WriteLine(e4);
+    Console.WriteLine(e6);
 }
 
 {

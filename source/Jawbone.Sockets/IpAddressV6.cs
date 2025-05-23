@@ -146,12 +146,15 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         ReadOnlySpan<char> format,
         IFormatProvider? provider)
     {
+        var addBrackets = provider?.GetFormat(typeof(FormatProvider)) is not null;
         var writer = SpanWriter.Create(utf8Destination);
         if (IsV4Mapped)
         {
             var success =
+                writer.TryWriteIf(addBrackets, (byte)'[') &&
                 writer.TryWrite("::ffff:"u8) &&
-                writer.TryWriteFormattable(new IpAddressV4(DataU32[3]));
+                writer.TryWriteFormattable(new IpAddressV4(DataU32[3])) &&
+                writer.TryWriteIf(addBrackets, (byte)']');
 
             bytesWritten = writer.Position;
             return success;
@@ -180,10 +183,11 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
             i = j;
         }
 
-        bool result;
+        var result = writer.TryWriteIf(addBrackets, (byte)'[');
         if (1 < zeroLength)
         {
             result =
+                result &&
                 writer.TryWriteV6Block(DataU16[..zeroStart]) &&
                 writer.TryWrite((byte)':') &&
                 writer.TryWrite((byte)':') &&
@@ -191,15 +195,18 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         }
         else
         {
-            result = writer.TryWriteV6Block(DataU16);
+            result = result && writer.TryWriteV6Block(DataU16);
         }
 
-        if (result && ScopeId != 0)
+        if (ScopeId != 0)
         {
             result =
+                result &&
                 writer.TryWrite((byte)'%') &&
                 writer.TryWriteFormattable(ScopeId);
         }
+
+        result = result && writer.TryWriteIf(addBrackets, (byte)']');
 
         bytesWritten = writer.Position;
         return result;
@@ -213,12 +220,15 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         ReadOnlySpan<char> format,
         IFormatProvider? provider)
     {
+        var addBrackets = provider?.GetFormat(typeof(FormatProvider)) is not null;
         var writer = SpanWriter.Create(destination);
         if (IsV4Mapped)
         {
             var success =
+                writer.TryWriteIf(addBrackets, '[') &&
                 writer.TryWrite("::ffff:") &&
-                writer.TryWriteFormattable(new IpAddressV4(DataU32[3]));
+                writer.TryWriteFormattable(new IpAddressV4(DataU32[3])) &&
+                writer.TryWriteIf(addBrackets, ']');
 
             charsWritten = writer.Position;
             return success;
@@ -247,10 +257,11 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
             i = j;
         }
 
-        bool result;
+        var result = writer.TryWriteIf(addBrackets, '[');
         if (1 < zeroLength)
         {
             result =
+                result &&
                 writer.TryWriteV6Block(DataU16[..zeroStart]) &&
                 writer.TryWrite(':') &&
                 writer.TryWrite(':') &&
@@ -258,15 +269,18 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         }
         else
         {
-            result = writer.TryWriteV6Block(DataU16);
+            result = result && writer.TryWriteV6Block(DataU16);
         }
 
-        if (result && ScopeId != 0)
+        if (ScopeId != 0)
         {
             result =
+                result &&
                 writer.TryWrite('%') &&
                 writer.TryWriteFormattable(ScopeId);
         }
+
+        result = result && writer.TryWriteIf(addBrackets, ']');
 
         charsWritten = writer.Position;
         return result;
@@ -748,5 +762,19 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
             throw new InvalidCastException("IPv6 address is not IPv4-mapped.");
 
         return new(address.DataU32[3]);
+    }
+
+    internal sealed class FormatProvider : IFormatProvider
+    {
+        public static readonly FormatProvider Instance = new();
+
+        private FormatProvider()
+        {
+        }
+
+        public object? GetFormat(Type? formatType)
+        {
+            return formatType == typeof(FormatProvider) ? this : null;
+        }
     }
 }

@@ -112,7 +112,10 @@ public struct IpEndpoint : IEquatable<IpEndpoint>, ISpanFormattable, IUtf8SpanFo
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct IpEndpoint<TAddress> : IEquatable<IpEndpoint<TAddress>>, ISpanFormattable, IUtf8SpanFormattable
+public struct IpEndpoint<TAddress> :
+    IEquatable<IpEndpoint<TAddress>>,
+    ISpanFormattable,
+    IUtf8SpanFormattable
     where TAddress : unmanaged, IIpAddress<TAddress>
 {
     public TAddress Address;
@@ -142,20 +145,8 @@ public struct IpEndpoint<TAddress> : IEquatable<IpEndpoint<TAddress>>, ISpanForm
         IFormatProvider? provider = default)
     {
         var writer = SpanWriter.Create(utf8Destination);
-        bool result;
-        if (Address is IpAddressV6)
-        {
-            result =
-                writer.TryWrite((byte)'[') &&
-                writer.TryWriteFormattable(Address) &&
-                writer.TryWrite((byte)']');
-        }
-        else
-        {
-            result = writer.TryWriteFormattable(Address);
-        }
-
-        result = result &&
+        var result =
+            writer.TryWriteFormattable(Address, default, IpAddressV6.FormatProvider.Instance) &&
             writer.TryWrite((byte)':') &&
             writer.TryWriteFormattable(Port.HostValue);
         bytesWritten = writer.Position;
@@ -169,20 +160,8 @@ public struct IpEndpoint<TAddress> : IEquatable<IpEndpoint<TAddress>>, ISpanForm
         IFormatProvider? provider = default)
     {
         var writer = SpanWriter.Create(destination);
-        bool result;
-        if (Address is IpAddressV6)
-        {
-            result =
-                writer.TryWrite('[') &&
-                writer.TryWriteFormattable(Address) &&
-                writer.TryWrite(']');
-        }
-        else
-        {
-            result = writer.TryWriteFormattable(Address);
-        }
-
-        result = result &&
+        var result =
+            writer.TryWriteFormattable(Address, default, IpAddressV6.FormatProvider.Instance) &&
             writer.TryWrite(':') &&
             writer.TryWriteFormattable(Port.HostValue);
         charsWritten = writer.Position;

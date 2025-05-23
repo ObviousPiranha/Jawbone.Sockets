@@ -6,6 +6,8 @@ Version 0.0.3 available on [NuGet](https://www.nuget.org/packages/Jawbone.Socket
 
 The [TLDR](rant.md) is that the .NET socket libraries allocate way too much and support too many address families. This library focuses on the essentials.
 
+See some [benchmark results here](benchmarks.md).
+
 ## Design
 
 ### IP Addresses

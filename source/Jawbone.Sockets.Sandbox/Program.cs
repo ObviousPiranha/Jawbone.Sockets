@@ -3,6 +3,11 @@ using Jawbone.Sockets;
 using System;
 
 {
+    var address = IpAddressV4.Parse("255.255.255.255");
+    Console.WriteLine(address);
+}
+
+{
     var address = new IpAddressV4(198, 51, 100, 0);
     var network = IpNetwork.Create(address, 24);
     // Console.WriteLine(network);

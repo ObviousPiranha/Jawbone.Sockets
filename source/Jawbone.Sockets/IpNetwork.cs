@@ -57,6 +57,8 @@ public readonly struct IpNetwork<TAddress> :
 
     public string ToString(string? format, IFormatProvider? formatProvider) => ToString();
 
+    public static IpNetwork<TAddress> LinkLocal => TAddress.LinkLocalNetwork;
+
     public static bool operator ==(IpNetwork<TAddress> a, IpNetwork<TAddress> b) => a.Equals(b);
     public static bool operator !=(IpNetwork<TAddress> a, IpNetwork<TAddress> b) => !a.Equals(b);
 }

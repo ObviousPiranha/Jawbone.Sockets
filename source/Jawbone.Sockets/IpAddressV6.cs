@@ -52,6 +52,8 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
     public static IpAddressV6 Any => default;
     public static IpAddressV6 Local { get; } = CreateLocal();
     public static IpAddressVersion Version => IpAddressVersion.V6;
+    // https://en.wikipedia.org/wiki/IPv6#Link-local_address
+    public static IpNetwork<IpAddressV6> LinkLocalNetwork => new(IpAddressV6.FromBytes(0xfe, 0x80), 10);
 
     private static readonly uint PrefixV4 = BitConverter.IsLittleEndian ? 0xffff0000 : 0x0000ffff;
 
@@ -751,6 +753,91 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         if ((baseAddress & mask) != baseAddress)
             ThrowExceptionFor.InvalidNetwork(address, prefixLength);
         return new(address, prefixLength);
+    }
+
+    public static IpAddressV6 FromBytes(params ReadOnlySpan<byte> bytes)
+    {
+        var n = int.Min(bytes.Length, ArrayU8.Length);
+        var result = default(IpAddressV6);
+        bytes[..n].CopyTo(result.DataU8);
+        return result;
+    }
+
+    public static IpAddressV6 FromHostU16(
+        ReadOnlySpan<ushort> left,
+        ReadOnlySpan<ushort> right = default,
+        uint scopeId = default)
+    {
+        if (ArrayU16.Length < left.Length + right.Length)
+            throw new ArgumentException("Total value count cannot exceed 8.");
+        var result = default(IpAddressV6);
+        if (BitConverter.IsLittleEndian)
+        {
+            for (int i = 0; i < left.Length; ++i)
+                result.DataU16[i] = BinaryPrimitives.ReverseEndianness(left[i]);
+            var offset = ArrayU16.Length - right.Length;
+            for (int i = 0; i < right.Length; ++i)
+                result.DataU16[offset + i] = BinaryPrimitives.ReverseEndianness(right[i]);
+        }
+        else
+        {
+            left.CopyTo(result.DataU16);
+            right.CopyTo(result.DataU16[^right.Length..]);
+        }
+        result.ScopeId = scopeId;
+        return result;
+    }
+
+    public static IpAddressV6 FromHostU32(
+        ReadOnlySpan<uint> left,
+        ReadOnlySpan<uint> right = default,
+        uint scopeId = default)
+    {
+        if (ArrayU32.Length < left.Length + right.Length)
+            throw new ArgumentException("Total value count cannot exceed 4.");
+        var result = default(IpAddressV6);
+        if (BitConverter.IsLittleEndian)
+        {
+            for (int i = 0; i < left.Length; ++i)
+                result.DataU32[i] = BinaryPrimitives.ReverseEndianness(left[i]);
+            var offset = ArrayU32.Length - right.Length;
+            for (int i = 0; i < right.Length; ++i)
+                result.DataU32[offset + i] = BinaryPrimitives.ReverseEndianness(right[i]);
+        }
+        else
+        {
+            left.CopyTo(result.DataU32);
+            right.CopyTo(result.DataU32[^right.Length..]);
+        }
+        result.ScopeId = scopeId;
+        return result;
+    }
+
+    public static IpAddressV6 FromHostU64(ulong left, ulong right, uint scopeId = default)
+    {
+        var result = default(IpAddressV6);
+        if (BitConverter.IsLittleEndian)
+        {
+            MemoryMarshal.Write(result.DataU8, BinaryPrimitives.ReverseEndianness(left));
+            MemoryMarshal.Write(result.DataU8[8..], BinaryPrimitives.ReverseEndianness(right));
+        }
+        else
+        {
+            MemoryMarshal.Write(result.DataU8, left);
+            MemoryMarshal.Write(result.DataU8[8..], right);
+        }
+        result.ScopeId = scopeId;
+        return result;
+    }
+
+    public static IpAddressV6 FromHostU128(UInt128 value, uint scopeId = default)
+    {
+        var result = default(IpAddressV6);
+        if (BitConverter.IsLittleEndian)
+            value = BinaryPrimitives.ReverseEndianness(value);
+        MemoryMarshal.Write(result.DataU8, value);
+        result.ScopeId = scopeId;
+        return result;
     }
 
     public static bool operator ==(IpAddressV6 a, IpAddressV6 b) => a.Equals(b);

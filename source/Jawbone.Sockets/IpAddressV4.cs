@@ -43,6 +43,8 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
     public static IpAddressV4 Local { get; } = new(127, 0, 0, 1);
     public static IpAddressV4 Broadcast { get; } = new(255, 255, 255, 255);
     public static IpAddressVersion Version => IpAddressVersion.V4;
+    // https://en.wikipedia.org/wiki/IPv4#Link-local_addressing
+    public static IpNetwork<IpAddressV4> LinkLocalNetwork => new(new IpAddressV4(169, 254, 0, 0), 16);
 
     [FieldOffset(0)]
     public ArrayU8 DataU8;
@@ -147,6 +149,9 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
                 throw new FormatException();
         }
 
+        if (!reader.AtEnd)
+            throw new FormatException();
+
         return result;
     }
 
@@ -163,7 +168,8 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
             reader.TryMatch('.') &&
             reader.TryParseByte(out result.DataU8[2]) &&
             reader.TryMatch('.') &&
-            reader.TryParseByte(out result.DataU8[3]);
+            reader.TryParseByte(out result.DataU8[3]) &&
+            reader.AtEnd;
         
         if (!succeeded)
             result = default;
@@ -197,6 +203,9 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
                 throw new FormatException();
         }
 
+        if (!reader.AtEnd)
+            throw new FormatException();
+
         return result;
     }
 
@@ -213,7 +222,8 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
             reader.TryMatch((byte)'.') &&
             reader.TryParseByte(out result.DataU8[2]) &&
             reader.TryMatch((byte)'.') &&
-            reader.TryParseByte(out result.DataU8[3]);
+            reader.TryParseByte(out result.DataU8[3]) &&
+            reader.AtEnd;
         
         if (!succeeded)
             result = default;

@@ -190,6 +190,7 @@ public class IpAddressV6Test
     [InlineData("1:0:0:0:0:a::3", "1::a:0:3")]
     [InlineData("2001:DB8:4006:812::200E", "2001:db8:4006:812::200e")]
     [InlineData("[::]", "::")]
+    [InlineData("::ffff:7f00:1", "::ffff:127.0.0.1")]
     public void UnusualFormat_ParsesSuccessfully(string input, string expectedUtf16)
     {
         Assert.NotEqual(expectedUtf16, input);
@@ -211,5 +212,7 @@ public class IpAddressV6Test
         { IpAddressV6.FromHostU16([0xfe80], [0xa, 0xe21]), "fe80::a:e21" },
         { IpAddressV6.FromHostU64(0x0123456789abcdef, 0xfedcba9876543210), "123:4567:89ab:cdef:fedc:ba98:7654:3210" },
         { IpAddressV6.FromHostU128(new(0x0123456789abcdef, 0xfedcba9876543210)), "123:4567:89ab:cdef:fedc:ba98:7654:3210" },
+        { IpAddressV6.FromHostU128(new(0x0123456789abcdef, 0x22446688aaccee)), "123:4567:89ab:cdef:22:4466:88aa:ccee" },
+        { (IpAddressV6)IpAddressV4.Local, "::ffff:127.0.0.1" }
     };
 }

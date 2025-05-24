@@ -153,11 +153,13 @@ public class IpAddressV6Test
 
     [Theory]
     [InlineData("")]
-    [InlineData("asdf")]
-    [InlineData("127.0.0.")]
-    [InlineData("1,1,1,1")]
-    [InlineData("253.254.255.256")]
-    [InlineData("1.2.3.4.5")]
+    [InlineData("::g")]
+    [InlineData("127.0.0.1")]
+    [InlineData("a3b:d:914fc:1::2")]
+    [InlineData(" ::")]
+    [InlineData("[::")]
+    [InlineData("::]")]
+    [InlineData("::1 ")]
     public void InvalidInput_FailsParsing(string utf16)
     {
         Assert.False(IpAddressV6.TryParse(utf16, out var result));
@@ -185,7 +187,9 @@ public class IpAddressV6Test
     [InlineData("1:0:0:0:0:0:0:2", "1::2")]
     [InlineData("1::2:0:0:0:0:3", "1:0:2::3")]
     [InlineData("1:0000:2:0:0:0:0:3", "1:0:2::3")]
-    [InlineData("1:0:0:0:0:2::3", "1::2:0:3")]
+    [InlineData("1:0:0:0:0:a::3", "1::a:0:3")]
+    [InlineData("2001:DB8:4006:812::200E", "2001:db8:4006:812::200e")]
+    [InlineData("[::]", "::")]
     public void UnusualFormat_ParsesSuccessfully(string input, string expectedUtf16)
     {
         Assert.NotEqual(expectedUtf16, input);

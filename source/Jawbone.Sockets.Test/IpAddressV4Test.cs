@@ -154,6 +154,16 @@ public class IpAddressV4Test
     }
 
     [Theory]
+    [MemberData(nameof(Addresses))]
+    public void DnsQuery_Matches(
+        IpAddressV4 expectedAddress,
+        string expectedUtf16)
+    {
+        var actualAddress = Dns.GetAddressV4(expectedUtf16);
+        Assert.Equal(expectedAddress, actualAddress);
+    }
+
+    [Theory]
     [InlineData("")]
     [InlineData("asdf")]
     [InlineData(" 127.0.0.1")]

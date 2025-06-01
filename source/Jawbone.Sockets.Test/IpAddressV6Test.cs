@@ -153,6 +153,16 @@ public class IpAddressV6Test
     }
 
     [Theory]
+    [MemberData(nameof(Addresses))]
+    public void DnsQuery_Matches(
+        IpAddressV6 expectedAddress,
+        string expectedUtf16)
+    {
+        var actualAddress = Dns.GetAddressV6(expectedUtf16);
+        Assert.Equal(expectedAddress, actualAddress);
+    }
+
+    [Theory]
     [InlineData("")]
     [InlineData("::g")]
     [InlineData("127.0.0.1")]

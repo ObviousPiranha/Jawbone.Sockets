@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -44,7 +45,7 @@ public class IpAddressV4Test
         string expectedUtf16)
     {
         var expectedUtf8 = Encoding.UTF8.GetBytes(expectedUtf16);
-        
+
         {
             var actualAddress = IpAddressV4.Parse(expectedUtf8);
             Assert.Equal(expectedAddress, actualAddress);
@@ -80,7 +81,7 @@ public class IpAddressV4Test
         string expectedUtf16)
     {
         ReadOnlySpan<byte> expectedUtf8 = Encoding.UTF8.GetBytes(expectedUtf16);
-        
+
         {
             Assert.True(IpAddressV4.TryParse(expectedUtf8, out var actualAddress));
             Assert.Equal(expectedAddress, actualAddress);
@@ -99,7 +100,7 @@ public class IpAddressV4Test
         string expectedUtf16)
     {
         Span<char> buffer = new char[64];
-        
+
         {
             Assert.True(expectedAddress.TryFormat(buffer, out var length));
             Assert.Equal(buffer[..length], expectedUtf16);
@@ -121,7 +122,7 @@ public class IpAddressV4Test
     {
         Span<byte> buffer = new byte[64];
         ReadOnlySpan<byte> expectedUtf8 = Encoding.UTF8.GetBytes(expectedUtf16);
-        
+
         {
             Assert.True(expectedAddress.TryFormat(buffer, out var length));
             Assert.Equal(buffer[..length], expectedUtf8);
@@ -153,8 +154,20 @@ public class IpAddressV4Test
     }
 
     [Theory]
+    [MemberData(nameof(Addresses))]
+    public void DnsQuery_Matches(
+        IpAddressV4 expectedAddress,
+        string expectedUtf16)
+    {
+        var actualAddress = Dns.GetAddressV4(expectedUtf16);
+        Assert.Equal(expectedAddress, actualAddress);
+    }
+
+    [Theory]
     [InlineData("")]
     [InlineData("asdf")]
+    [InlineData(" 127.0.0.1")]
+    [InlineData("127.0.0.1 ")]
     [InlineData("127.0.0.")]
     [InlineData("1,1,1,1")]
     [InlineData("253.254.255.256")]
@@ -190,6 +203,23 @@ public class IpAddressV4Test
         var address = IpAddressV4.Parse(input);
         var actualUtf16 = address.ToString();
         Assert.Equal(expectedUtf16, actualUtf16);
+    }
+
+    [Theory]
+    [MemberData(nameof(Addresses))]
+    public void CastsToAndFromDotNetIpAddress(IpAddressV4 expected, string _)
+    {
+        var dotNetIpAddress = (IPAddress)expected;
+        var actual = (IpAddressV4)dotNetIpAddress;
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [MemberData(nameof(Addresses))]
+    public void DotNetIpAddressFailsCastToV6(IpAddressV4 ipAddress, string _)
+    {
+        var dotNetIpAddress = (IPAddress)ipAddress;
+        Assert.Throws<InvalidCastException>(() => (IpAddressV6)dotNetIpAddress);
     }
 
     public static TheoryData<IpAddressV4, string> Addresses => new()

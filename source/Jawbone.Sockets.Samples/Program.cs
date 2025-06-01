@@ -100,7 +100,7 @@ internal class Program
 
                 if (string.IsNullOrWhiteSpace(input))
                     break;
-                
+
                 var writer = SpanWriter.Create(outBuffer);
                 writer.WriteAsUtf8(input);
 
@@ -212,7 +212,7 @@ internal class Program
                     {
                         if (endpoint == origin)
                             continue;
-                        
+
                         server.Send(writer.Written, endpoint);
                     }
                 }

@@ -58,7 +58,7 @@ public static class Dns
             address = endpoint.Address;
             return true;
         }
-        
+
         address = default;
         return false;
     }

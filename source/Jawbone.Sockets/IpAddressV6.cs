@@ -1,6 +1,8 @@
 using System;
 using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -148,7 +150,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         ReadOnlySpan<char> format,
         IFormatProvider? provider)
     {
-        var addBrackets = provider?.GetFormat(typeof(FormatProvider)) is not null;
+        var addBrackets = provider is FormatProvider;
         var writer = SpanWriter.Create(utf8Destination);
         if (IsV4Mapped)
         {
@@ -222,7 +224,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         ReadOnlySpan<char> format,
         IFormatProvider? provider)
     {
-        var addBrackets = provider?.GetFormat(typeof(FormatProvider)) is not null;
+        var addBrackets = provider is FormatProvider;
         var writer = SpanWriter.Create(destination);
         if (IsV4Mapped)
         {
@@ -837,6 +839,24 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
             value = BinaryPrimitives.ReverseEndianness(value);
         MemoryMarshal.Write(result.DataU8, value);
         result.ScopeId = scopeId;
+        return result;
+    }
+
+    public static explicit operator IpAddressV6(IPAddress ipAddress)
+    {
+        ArgumentNullException.ThrowIfNull(ipAddress);
+        if (ipAddress.AddressFamily != AddressFamily.InterNetworkV6)
+            throw new InvalidCastException("IPAddress instance is not IPv6.");
+        var result = default(IpAddressV6);
+        if (!ipAddress.TryWriteBytes(result.DataU8, out var bytesWritten) || bytesWritten != ArrayU8.Length)
+            throw new InvalidCastException("Failed to write address bytes.");
+        result.ScopeId = checked((uint)ipAddress.ScopeId);
+        return result;
+    }
+
+    public static explicit operator IPAddress(IpAddressV6 ipAddress)
+    {
+        var result = new IPAddress(ipAddress.DataU8, ipAddress.ScopeId);
         return result;
     }
 

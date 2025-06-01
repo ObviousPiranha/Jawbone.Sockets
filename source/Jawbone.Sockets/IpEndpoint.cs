@@ -11,6 +11,8 @@ public struct IpEndpoint : IEquatable<IpEndpoint>, ISpanFormattable, IUtf8SpanFo
     public NetworkPort Port;
     private readonly ushort _padding;
 
+    public readonly IpAddressVersion Version => Address.Version;
+
     public IpEndpoint(IpAddress address, NetworkPort port)
     {
         Address = address;

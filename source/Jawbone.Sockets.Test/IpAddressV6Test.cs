@@ -13,6 +13,14 @@ public class IpAddressV6Test
         AssertSize<IpAddressV6>(20);
         AssertSize<IpEndpoint<IpAddressV6>>(24);
         Assert.True(IpAddressV6.Local.IsLoopback);
+        
+        {
+            var address = default(IpAddressV6);
+            byte v = 0xab;
+            address.DataU8[..].Fill(v);
+            foreach (var b in address.DataU8)
+                Assert.Equal(b, v);
+        }
 
         static void AssertSize<T>(int size) where T : unmanaged
         {

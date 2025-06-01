@@ -150,7 +150,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         ReadOnlySpan<char> format,
         IFormatProvider? provider)
     {
-        var addBrackets = provider?.GetFormat(typeof(FormatProvider)) is not null;
+        var addBrackets = provider is FormatProvider;
         var writer = SpanWriter.Create(utf8Destination);
         if (IsV4Mapped)
         {
@@ -224,7 +224,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         ReadOnlySpan<char> format,
         IFormatProvider? provider)
     {
-        var addBrackets = provider?.GetFormat(typeof(FormatProvider)) is not null;
+        var addBrackets = provider is FormatProvider;
         var writer = SpanWriter.Create(destination);
         if (IsV4Mapped)
         {

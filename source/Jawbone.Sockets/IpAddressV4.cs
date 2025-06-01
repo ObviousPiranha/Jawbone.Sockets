@@ -1,6 +1,8 @@
 using System;
 using System.Buffers.Binary;
 using System.Diagnostics.CodeAnalysis;
+using System.Net;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -243,6 +245,23 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
         if ((address.DataU32 & mask) != address.DataU32)
             ThrowExceptionFor.InvalidNetwork(address, prefixLength);
         return new(address, prefixLength);
+    }
+
+    public static explicit operator IpAddressV4(IPAddress ipAddress)
+    {
+        ArgumentNullException.ThrowIfNull(ipAddress);
+        if (ipAddress.AddressFamily != AddressFamily.InterNetwork)
+            throw new InvalidCastException("IPAddress instance is not IPv4.");
+        var result = default(IpAddressV4);
+        if (!ipAddress.TryWriteBytes(result.DataU8, out var bytesWritten) || bytesWritten != ArrayU8.Length)
+            throw new InvalidCastException("Failed to write address bytes.");
+        return result;
+    }
+
+    public static explicit operator IPAddress(IpAddressV4 ipAddress)
+    {
+        var result = new IPAddress(ipAddress.DataU32);
+        return result;
     }
 
     public static bool operator ==(IpAddressV4 a, IpAddressV4 b) => a.Equals(b);

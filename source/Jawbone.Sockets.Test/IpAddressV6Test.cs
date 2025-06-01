@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -197,6 +198,23 @@ public class IpAddressV6Test
         var address = IpAddressV6.Parse(input);
         var actualUtf16 = address.ToString();
         Assert.Equal(expectedUtf16, actualUtf16);
+    }
+
+    [Theory]
+    [MemberData(nameof(Addresses))]
+    public void CastsToAndFromDotNetIpAddress(IpAddressV6 expected, string _)
+    {
+        var dotNetIpAddress = (IPAddress)expected;
+        var actual = (IpAddressV6)dotNetIpAddress;
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [MemberData(nameof(Addresses))]
+    public void DotNetIpAddressFailsCastToV4(IpAddressV6 ipAddress, string _)
+    {
+        var dotNetIpAddress = (IPAddress)ipAddress;
+        Assert.Throws<InvalidCastException>(() => (IpAddressV4)dotNetIpAddress);
     }
 
     public static TheoryData<IpAddressV6, string> Addresses => new()

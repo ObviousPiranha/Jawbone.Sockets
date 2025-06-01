@@ -1,4 +1,6 @@
 using System;
+using System.Net;
+using System.Net.Sockets;
 
 namespace Jawbone.Sockets;
 
@@ -7,6 +9,22 @@ public readonly struct IpAddress : IEquatable<IpAddress>, ISpanFormattable, IUtf
     private readonly IpAddressV6 _storage;
 
     public readonly IpAddressVersion Version { get; }
+
+    public IpAddress(IPAddress? ipAddress)
+    {
+        if (ipAddress is null)
+            return;
+        if (ipAddress.AddressFamily == AddressFamily.InterNetwork)
+        {
+            Version = IpAddressVersion.V4;
+            _ = ipAddress.TryWriteBytes(_storage.DataU8[..4], out _);
+        }
+        else if (ipAddress.AddressFamily == AddressFamily.InterNetworkV6)
+        {
+            Version = IpAddressVersion.V6;
+            _ = ipAddress.TryWriteBytes(_storage.DataU8, out _);
+        }
+    }
 
     public IpAddress(IpAddressV4 address)
     {
@@ -105,6 +123,18 @@ public readonly struct IpAddress : IEquatable<IpAddress>, ISpanFormattable, IUtf
 
     public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
 
+    public static implicit operator IPAddress?(IpAddress address)
+    {
+        var result = address.Version switch
+        {
+            IpAddressVersion.V4 => (IPAddress)address.AsV4(),
+            IpAddressVersion.V6 => (IPAddress)address.AsV6(),
+            _ => null
+        };
+
+        return result;
+    }
+
     public static explicit operator IpAddressV4(IpAddress address)
     {
         if (address.Version != IpAddressVersion.V4)
@@ -121,6 +151,7 @@ public readonly struct IpAddress : IEquatable<IpAddress>, ISpanFormattable, IUtf
         return address.AsV6();
     }
 
+    public static implicit operator IpAddress(IPAddress? ipAddress) => new(ipAddress);
     public static implicit operator IpAddress(IpAddressV4 address) => new(address);
     public static implicit operator IpAddress(IpAddressV6 address) => new(address);
     public static bool operator ==(IpAddress a, IpAddress b) => a.Equals(b);

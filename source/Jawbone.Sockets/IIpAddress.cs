@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 
 namespace Jawbone.Sockets;
 
@@ -32,6 +33,9 @@ public interface IIpAddress<TAddress> :
     static abstract TAddress Parse(ReadOnlySpan<byte> utf8Text);
     static abstract bool TryParse(ReadOnlySpan<byte> utf8Text, out TAddress result);
     static abstract IpNetwork<TAddress> CreateNetwork(TAddress address, int prefixLength);
+
+    static abstract explicit operator TAddress(IPAddress ipAddress);
+    static abstract explicit operator IPAddress(TAddress ipAddress);
 
     static abstract bool operator ==(TAddress a, TAddress b);
     static abstract bool operator !=(TAddress a, TAddress b);

@@ -1,8 +1,8 @@
 # Jawbone.Sockets
 
-UDP and TCP socket library for game engines!
+[![NuGet Version](https://img.shields.io/nuget/v/Jawbone.Sockets)](https://www.nuget.org/packages/Jawbone.Sockets/)
 
-Version 0.0.3 available on [NuGet](https://www.nuget.org/packages/Jawbone.Sockets/).
+UDP and TCP socket library for game engines!
 
 The [TLDR](rant.md) is that the .NET socket libraries allocate way too much and support too many address families. This library focuses on the essentials.
 

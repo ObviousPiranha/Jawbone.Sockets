@@ -172,7 +172,7 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
             reader.TryMatch('.') &&
             reader.TryParseByte(out result.DataU8[3]) &&
             reader.AtEnd;
-        
+
         if (!succeeded)
             result = default;
 
@@ -226,7 +226,7 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
             reader.TryMatch((byte)'.') &&
             reader.TryParseByte(out result.DataU8[3]) &&
             reader.AtEnd;
-        
+
         if (!succeeded)
             result = default;
 

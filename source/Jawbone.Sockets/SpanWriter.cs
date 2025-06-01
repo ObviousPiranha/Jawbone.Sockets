@@ -52,7 +52,7 @@ ref struct SpanWriter<T>
         items.CopyTo(Free);
         _position += items.Length;
     }
-} 
+}
 
 static class SpanWriter
 {

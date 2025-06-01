@@ -23,7 +23,7 @@ public interface IIpAddress<TAddress> :
     where TAddress : unmanaged, IIpAddress<TAddress>
 {
     bool IsInNetwork(IpNetwork<TAddress> ipNetwork);
-    
+
     static abstract TAddress Any { get; }
     static abstract TAddress Local { get; }
     static abstract IpAddressVersion Version { get; }

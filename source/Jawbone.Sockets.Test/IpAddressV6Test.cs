@@ -13,7 +13,7 @@ public class IpAddressV6Test
         AssertSize<IpAddressV6>(20);
         AssertSize<IpEndpoint<IpAddressV6>>(24);
         Assert.True(IpAddressV6.Local.IsLoopback);
-        
+
         {
             var address = default(IpAddressV6);
             byte v = 0xab;
@@ -52,7 +52,7 @@ public class IpAddressV6Test
         string expectedUtf16)
     {
         var expectedUtf8 = Encoding.UTF8.GetBytes(expectedUtf16);
-        
+
         {
             var actualAddress = IpAddressV6.Parse(expectedUtf8);
             Assert.Equal(expectedAddress, actualAddress);
@@ -88,7 +88,7 @@ public class IpAddressV6Test
         string expectedUtf16)
     {
         ReadOnlySpan<byte> expectedUtf8 = Encoding.UTF8.GetBytes(expectedUtf16);
-        
+
         {
             Assert.True(IpAddressV6.TryParse(expectedUtf8, out var actualAddress));
             Assert.Equal(expectedAddress, actualAddress);
@@ -107,7 +107,7 @@ public class IpAddressV6Test
         string expectedUtf16)
     {
         Span<char> buffer = new char[64];
-        
+
         {
             Assert.True(expectedAddress.TryFormat(buffer, out var length));
             Assert.Equal(buffer[..length], expectedUtf16);
@@ -129,7 +129,7 @@ public class IpAddressV6Test
     {
         Span<byte> buffer = new byte[64];
         ReadOnlySpan<byte> expectedUtf8 = Encoding.UTF8.GetBytes(expectedUtf16);
-        
+
         {
             Assert.True(expectedAddress.TryFormat(buffer, out var length));
             Assert.Equal(buffer[..length], expectedUtf8);

@@ -45,7 +45,7 @@ public class IpAddressV4Test
         string expectedUtf16)
     {
         var expectedUtf8 = Encoding.UTF8.GetBytes(expectedUtf16);
-        
+
         {
             var actualAddress = IpAddressV4.Parse(expectedUtf8);
             Assert.Equal(expectedAddress, actualAddress);
@@ -81,7 +81,7 @@ public class IpAddressV4Test
         string expectedUtf16)
     {
         ReadOnlySpan<byte> expectedUtf8 = Encoding.UTF8.GetBytes(expectedUtf16);
-        
+
         {
             Assert.True(IpAddressV4.TryParse(expectedUtf8, out var actualAddress));
             Assert.Equal(expectedAddress, actualAddress);
@@ -100,7 +100,7 @@ public class IpAddressV4Test
         string expectedUtf16)
     {
         Span<char> buffer = new char[64];
-        
+
         {
             Assert.True(expectedAddress.TryFormat(buffer, out var length));
             Assert.Equal(buffer[..length], expectedUtf16);
@@ -122,7 +122,7 @@ public class IpAddressV4Test
     {
         Span<byte> buffer = new byte[64];
         ReadOnlySpan<byte> expectedUtf8 = Encoding.UTF8.GetBytes(expectedUtf16);
-        
+
         {
             Assert.True(expectedAddress.TryFormat(buffer, out var length));
             Assert.Equal(buffer[..length], expectedUtf8);

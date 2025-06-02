@@ -1,6 +1,6 @@
 # Jawbone.Sockets
 
-[![NuGet Version](https://img.shields.io/nuget/v/Jawbone.Sockets)](https://www.nuget.org/packages/Jawbone.Sockets/) ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ObviousPiranha/Jawbone.Sockets/dotnet-desktop.yml)
+[![NuGet Version](https://img.shields.io/nuget/v/Jawbone.Sockets)](https://www.nuget.org/packages/Jawbone.Sockets/) [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/ObviousPiranha/Jawbone.Sockets/dotnet-desktop.yml)](https://github.com/ObviousPiranha/Jawbone.Sockets/actions)
 
 
 UDP and TCP socket library for game engines!

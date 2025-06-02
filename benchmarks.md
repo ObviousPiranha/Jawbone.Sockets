@@ -33,8 +33,11 @@ It's worth noting that `IPAddress` does not support parsing UTF-8.
 
 ### Send-Poll-Receive
 
-| Method            | Mean     | Error     | StdDev    | Ratio | Gen0   | Allocated | Alloc Ratio |
-|------------------ |---------:|----------:|----------:|------:|-------:|----------:|------------:|
-| JawboneUdpV4      | 2.818 μs | 0.0189 μs | 0.0168 μs |  1.00 |      - |         - |          NA |
-| SystemUdpClientV4 | 3.248 μs | 0.0056 μs | 0.0049 μs |  1.15 | 0.0229 |     424 B |          NA |
-| SystemUdpSocketV4 | 3.003 μs | 0.0436 μs | 0.0386 μs |  1.07 |      - |         - |          NA |
+| Method            | Mean     | Error     | StdDev    | Gen0   | Allocated |
+|------------------ |---------:|----------:|----------:|-------:|----------:|
+| JawboneUdpV4      | 2.903 μs | 0.0101 μs | 0.0089 μs |      - |         - |
+| JawboneUdpV6      | 2.605 μs | 0.0105 μs | 0.0098 μs |      - |         - |
+| SystemUdpClientV4 | 3.385 μs | 0.0084 μs | 0.0078 μs | 0.0229 |     424 B |
+| SystemUdpClientV6 | 3.085 μs | 0.0096 μs | 0.0085 μs | 0.0267 |     480 B |
+| SystemUdpSocketV4 | 3.060 μs | 0.0533 μs | 0.0499 μs |      - |         - |
+| SystemUdpSocketV6 | 2.834 μs | 0.0132 μs | 0.0123 μs |      - |         - |

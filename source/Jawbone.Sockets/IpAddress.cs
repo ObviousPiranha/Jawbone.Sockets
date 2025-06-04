@@ -38,17 +38,17 @@ public readonly struct IpAddress : IEquatable<IpAddress>, ISpanFormattable, IUtf
         _storage = address;
     }
 
-    public readonly bool IsV4(out IpAddressV4 address)
+    public readonly bool TryGetV4(out IpAddressV4 ipAddress)
     {
         var result = Version == IpAddressVersion.V4;
-        address = result ? AsV4() : default;
+        ipAddress = result ? AsV4() : default;
         return result;
     }
 
-    public readonly bool IsV6(out IpAddressV6 address)
+    public readonly bool TryGetV6(out IpAddressV6 ipAddress)
     {
         var result = Version == IpAddressVersion.V6;
-        address = result ? AsV6() : default;
+        ipAddress = result ? AsV6() : default;
         return result;
     }
 
@@ -135,25 +135,7 @@ public readonly struct IpAddress : IEquatable<IpAddress>, ISpanFormattable, IUtf
         return result;
     }
 
-    public static explicit operator IpAddressV4(IpAddress address)
-    {
-        if (address.Version != IpAddressVersion.V4)
-            throw new InvalidCastException();
-
-        return address.AsV4();
-    }
-
-    public static explicit operator IpAddressV6(IpAddress address)
-    {
-        if (address.Version != IpAddressVersion.V6)
-            throw new InvalidCastException();
-
-        return address.AsV6();
-    }
-
     public static implicit operator IpAddress(IPAddress? ipAddress) => new(ipAddress);
-    public static implicit operator IpAddress(IpAddressV4 address) => new(address);
-    public static implicit operator IpAddress(IpAddressV6 address) => new(address);
     public static bool operator ==(IpAddress a, IpAddress b) => a.Equals(b);
     public static bool operator !=(IpAddress a, IpAddress b) => !a.Equals(b);
 }

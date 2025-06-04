@@ -37,6 +37,9 @@ public interface IIpAddress<TAddress> :
     static abstract explicit operator TAddress(IPAddress ipAddress);
     static abstract explicit operator IPAddress(TAddress ipAddress);
 
+    static abstract implicit operator IpAddress(TAddress ipAddress);
+    static abstract explicit operator TAddress(IpAddress ipAddress);
+
     static abstract bool operator ==(TAddress a, TAddress b);
     static abstract bool operator !=(TAddress a, TAddress b);
 }

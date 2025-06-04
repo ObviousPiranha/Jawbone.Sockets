@@ -264,6 +264,16 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
         return result;
     }
 
+    public static implicit operator IpAddress(IpAddressV4 ipAddress) => new(ipAddress);
+
+    public static explicit operator IpAddressV4(IpAddress ipAddress)
+    {
+        if (ipAddress.Version != Version)
+            throw new InvalidCastException();
+
+        return ipAddress.AsV4();
+    }
+
     public static bool operator ==(IpAddressV4 a, IpAddressV4 b) => a.Equals(b);
     public static bool operator !=(IpAddressV4 a, IpAddressV4 b) => !a.Equals(b);
 }

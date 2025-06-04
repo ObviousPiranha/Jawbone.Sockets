@@ -860,6 +860,16 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         return result;
     }
 
+    public static implicit operator IpAddress(IpAddressV6 ipAddress) => new(ipAddress);
+
+    public static explicit operator IpAddressV6(IpAddress ipAddress)
+    {
+        if (ipAddress.Version != Version)
+            throw new InvalidCastException();
+
+        return ipAddress.AsV6();
+    }
+
     public static bool operator ==(IpAddressV6 a, IpAddressV6 b) => a.Equals(b);
     public static bool operator !=(IpAddressV6 a, IpAddressV6 b) => !a.Equals(b);
     public static explicit operator IpAddressV6(IpAddressV4 address) => new(0, 0, PrefixV4, address.DataU32);

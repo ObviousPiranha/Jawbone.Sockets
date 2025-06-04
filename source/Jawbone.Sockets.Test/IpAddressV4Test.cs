@@ -13,6 +13,7 @@ public class IpAddressV4Test
     {
         AssertSize<IpAddressV4>(4);
         AssertSize<IpEndpoint<IpAddressV4>>(8);
+        Assert.Equal(IpAddressVersion.V4, IpAddressV4.Version);
         Assert.True(IpAddressV4.Local.IsLoopback);
 
         static void AssertSize<T>(int size) where T : unmanaged
@@ -210,8 +211,19 @@ public class IpAddressV4Test
     public void CastsToAndFromDotNetIpAddress(IpAddressV4 expected, string _)
     {
         var dotNetIpAddress = (IPAddress)expected;
-        var actual = (IpAddressV4)dotNetIpAddress;
-        Assert.Equal(expected, actual);
+        {
+            var actual = (IpAddressV4)dotNetIpAddress;
+            Assert.Equal(expected, actual);
+
+        }
+
+        {
+            IpAddress actual = dotNetIpAddress;
+            Assert.True(expected == actual);
+            Assert.False(expected != actual);
+            Assert.True(actual == expected);
+            Assert.False(actual != expected);
+        }
     }
 
     [Theory]

@@ -276,4 +276,9 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
 
     public static bool operator ==(IpAddressV4 a, IpAddressV4 b) => a.Equals(b);
     public static bool operator !=(IpAddressV4 a, IpAddressV4 b) => !a.Equals(b);
+
+    public static bool operator ==(IpAddressV4 a, IpAddress b) => b.Version == Version && b.AsV4().Equals(a);
+    public static bool operator !=(IpAddressV4 a, IpAddress b) => b.Version != Version || !b.AsV4().Equals(a);
+    public static bool operator ==(IpAddress a, IpAddressV4 b) => a.Version == Version && a.AsV4().Equals(b);
+    public static bool operator !=(IpAddress a, IpAddressV4 b) => a.Version != Version || !a.AsV4().Equals(b);
 }

@@ -872,6 +872,12 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
 
     public static bool operator ==(IpAddressV6 a, IpAddressV6 b) => a.Equals(b);
     public static bool operator !=(IpAddressV6 a, IpAddressV6 b) => !a.Equals(b);
+
+    public static bool operator ==(IpAddressV6 a, IpAddress b) => b.Version == Version && b.AsV6().Equals(a);
+    public static bool operator !=(IpAddressV6 a, IpAddress b) => b.Version != Version || !b.AsV6().Equals(a);
+    public static bool operator ==(IpAddress a, IpAddressV6 b) => a.Version == Version && a.AsV6().Equals(b);
+    public static bool operator !=(IpAddress a, IpAddressV6 b) => a.Version != Version || !a.AsV6().Equals(b);
+
     public static explicit operator IpAddressV6(IpAddressV4 address) => new(0, 0, PrefixV4, address.DataU32);
     public static explicit operator IpAddressV4(IpAddressV6 address)
     {

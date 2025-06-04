@@ -12,6 +12,7 @@ public class IpAddressV6Test
     {
         AssertSize<IpAddressV6>(20);
         AssertSize<IpEndpoint<IpAddressV6>>(24);
+        Assert.Equal(IpAddressVersion.V6, IpAddressV6.Version);
         Assert.True(IpAddressV6.Local.IsLoopback);
 
         {
@@ -223,8 +224,18 @@ public class IpAddressV6Test
     public void CastsToAndFromDotNetIpAddress(IpAddressV6 expected, string _)
     {
         var dotNetIpAddress = (IPAddress)expected;
-        var actual = (IpAddressV6)dotNetIpAddress;
-        Assert.Equal(expected, actual);
+        {
+            var actual = (IpAddressV6)dotNetIpAddress;
+            Assert.Equal(expected, actual);
+        }
+
+        {
+            IpAddress actual = dotNetIpAddress;
+            Assert.True(expected == actual);
+            Assert.False(expected != actual);
+            Assert.True(actual == expected);
+            Assert.False(actual != expected);
+        }
     }
 
     [Theory]

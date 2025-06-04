@@ -42,4 +42,9 @@ public interface IIpAddress<TAddress> :
 
     static abstract bool operator ==(TAddress a, TAddress b);
     static abstract bool operator !=(TAddress a, TAddress b);
+
+    static abstract bool operator ==(TAddress a, IpAddress b);
+    static abstract bool operator !=(TAddress a, IpAddress b);
+    static abstract bool operator ==(IpAddress a, TAddress b);
+    static abstract bool operator !=(IpAddress a, TAddress b);
 }

@@ -23,6 +23,7 @@ public readonly struct IpAddress : IEquatable<IpAddress>, ISpanFormattable, IUtf
         {
             Version = IpAddressVersion.V6;
             _ = ipAddress.TryWriteBytes(_storage.DataU8, out _);
+            _storage.ScopeId = (uint)ipAddress.ScopeId;
         }
     }
 

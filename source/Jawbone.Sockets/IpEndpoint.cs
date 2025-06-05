@@ -1,5 +1,7 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Jawbone.Sockets;
@@ -136,12 +138,14 @@ public struct IpEndpoint : IEquatable<IpEndpoint>, ISpanFormattable, IUtf8SpanFo
 public struct IpEndpoint<TAddress> :
     IEquatable<IpEndpoint<TAddress>>,
     ISpanFormattable,
-    IUtf8SpanFormattable
+    IUtf8SpanFormattable,
+    ISpanParsable<IpEndpoint<TAddress>>,
+    IUtf8SpanParsable<IpEndpoint<TAddress>>
     where TAddress : unmanaged, IIpAddress<TAddress>
 {
     public TAddress Address;
     public NetworkPort Port;
-    private readonly ushort _padding;
+    private ushort _padding;
     public readonly bool IsDefault => Address.IsDefault && Port.NetworkValue == 0;
 
     public IpEndpoint(TAddress address, NetworkPort port)
@@ -190,6 +194,92 @@ public struct IpEndpoint<TAddress> :
     }
 
     public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
+
+    public static IpEndpoint<TAddress> Parse(
+        ReadOnlySpan<char> s,
+        IFormatProvider? provider = default)
+    {
+        if (!TryParse(s, provider, out var result))
+            throw new FormatException();
+        return result;
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<char> s,
+        IFormatProvider? provider,
+        out IpEndpoint<TAddress> result)
+    {
+        var colon = s.LastIndexOf(':');
+        if (colon == -1)
+        {
+            result = default;
+            return false;
+        }
+
+        Unsafe.SkipInit(out result);
+        if (!TAddress.TryParse(s[..colon], IpAddressV6.FormatProvider.Instance, out result.Address) ||
+            !NetworkPort.TryParse(s[(colon + 1)..], out result.Port))
+        {
+            result = default;
+            return false;
+        }
+
+        result._padding = 0;
+        return true;
+    }
+
+    public static bool TryParse(ReadOnlySpan<char> s, out IpEndpoint<TAddress> result) => TryParse(s, default, out result);
+
+    public static IpEndpoint<TAddress> Parse(string s, IFormatProvider? provider = default)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        if (!TryParse(s.AsSpan(), provider, out var result))
+            throw new FormatException();
+        return result;
+    }
+
+    public static bool TryParse(
+        [NotNullWhen(true)] string? s,
+        IFormatProvider? provider,
+        out IpEndpoint<TAddress> result)
+    {
+        return TryParse(s.AsSpan(), provider, out result);
+    }
+
+    public static bool TryParse([NotNullWhen(true)] string? s, out IpEndpoint<TAddress> result) => TryParse(s, default, out result);
+
+    public static IpEndpoint<TAddress> Parse(ReadOnlySpan<byte> utf8Text, IFormatProvider? provider = default)
+    {
+        if (!TryParse(utf8Text, provider, out var result))
+            throw new FormatException();
+        return result;
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<byte> utf8Text,
+        IFormatProvider? provider,
+        out IpEndpoint<TAddress> result)
+    {
+        var colon = utf8Text.LastIndexOf((byte)':');
+        if (colon == -1)
+        {
+            result = default;
+            return false;
+        }
+
+        Unsafe.SkipInit(out result);
+        if (!TAddress.TryParse(utf8Text[..colon], IpAddressV6.FormatProvider.Instance, out result.Address) ||
+            !NetworkPort.TryParse(utf8Text[(colon + 1)..], out result.Port))
+        {
+            result = default;
+            return false;
+        }
+
+        result._padding = 0;
+        return true;
+    }
+
+    public static bool TryParse(ReadOnlySpan<byte> utf8Text, out IpEndpoint<TAddress> result) => TryParse(utf8Text, default, out result);
 
     public static explicit operator IpEndpoint<TAddress>(IPEndPoint ipEndpoint)
     {

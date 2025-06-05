@@ -1,10 +1,16 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Net.Sockets;
 
 namespace Jawbone.Sockets;
 
-public readonly struct IpAddress : IEquatable<IpAddress>, ISpanFormattable, IUtf8SpanFormattable
+public readonly struct IpAddress :
+    IEquatable<IpAddress>,
+    ISpanFormattable,
+    IUtf8SpanFormattable,
+    ISpanParsable<IpAddress>,
+    IUtf8SpanParsable<IpAddress>
 {
     private readonly IpAddressV6 _storage;
 
@@ -123,6 +129,82 @@ public readonly struct IpAddress : IEquatable<IpAddress>, ISpanFormattable, IUtf
     }
 
     public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
+
+    public static IpAddress Parse(ReadOnlySpan<char> s, IFormatProvider? provider = default)
+    {
+        if (!TryParse(s, provider, out var result))
+            throw new FormatException();
+        return result;
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<char> s,
+        IFormatProvider? provider,
+        out IpAddress result)
+    {
+        if (IpAddressV4.TryParse(s, provider, out var v4))
+        {
+            result = new(v4);
+            return true;
+        }
+
+        if (IpAddressV6.TryParse(s, provider, out var v6))
+        {
+            result = new(v6);
+            return true;
+        }
+
+        result = default;
+        return false;
+    }
+
+    public static bool TryParse(ReadOnlySpan<char> s, out IpAddress result) => TryParse(s, default, out result);
+
+    public static IpAddress Parse(string s, IFormatProvider? provider)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        if (!TryParse(s.AsSpan(), provider, out var result))
+            throw new FormatException();
+        return result;
+    }
+
+    public static bool TryParse(
+        [NotNullWhen(true)] string? s,
+        IFormatProvider? provider,
+        out IpAddress result)
+    {
+        return TryParse(s.AsSpan(), provider, out result);
+    }
+
+    public static IpAddress Parse(ReadOnlySpan<byte> utf8Text, IFormatProvider? provider = default)
+    {
+        if (!TryParse(utf8Text, provider, out var result))
+            throw new FormatException();
+        return result;
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<byte> utf8Text,
+        IFormatProvider? provider,
+        out IpAddress result)
+    {
+        if (IpAddressV4.TryParse(utf8Text, provider, out var v4))
+        {
+            result = new(v4);
+            return true;
+        }
+
+        if (IpAddressV6.TryParse(utf8Text, provider, out var v6))
+        {
+            result = new(v6);
+            return true;
+        }
+
+        result = default;
+        return false;
+    }
+
+    public static bool TryParse(ReadOnlySpan<byte> utf8Text, out IpAddress result) => TryParse(utf8Text, default, out result);
 
     public static implicit operator IPAddress?(IpAddress address)
     {

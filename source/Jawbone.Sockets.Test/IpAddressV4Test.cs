@@ -1,7 +1,6 @@
 using System;
 using System.Net;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Jawbone.Sockets.Test;
@@ -173,18 +172,29 @@ public class IpAddressV4Test
     [InlineData("1,1,1,1")]
     [InlineData("253.254.255.256")]
     [InlineData("1.2.3.4.5")]
+    [InlineData("2001:db8:4006:812::200e")]
     public void InvalidInput_FailsParsing(string utf16)
     {
         Assert.False(IpAddressV4.TryParse(utf16, out var result));
         Assert.False(IpAddressV4.TryParse(utf16, null, out result));
+        Assert.False(IpAddress.TryParse(utf16, out var result2) && result2.Version == IpAddressVersion.V4);
+        Assert.False(IpAddress.TryParse(utf16, null, out result2) && result2.Version == IpAddressVersion.V4);
         Assert.True(result.IsDefault);
         Assert.False(IpAddressV4.TryParse(utf16.AsSpan(), out result));
         Assert.False(IpAddressV4.TryParse(utf16.AsSpan(), null, out result));
+        Assert.False(IpAddress.TryParse(utf16.AsSpan(), out result2) && result2.Version == IpAddressVersion.V4);
+        Assert.False(IpAddress.TryParse(utf16.AsSpan(), null, out result2) && result2.Version == IpAddressVersion.V4);
         Assert.True(result.IsDefault);
         Assert.Throws<FormatException>(() => IpAddressV4.Parse(utf16));
         Assert.Throws<FormatException>(() => IpAddressV4.Parse(utf16, null));
         Assert.Throws<FormatException>(() => IpAddressV4.Parse(utf16.AsSpan()));
         Assert.Throws<FormatException>(() => IpAddressV4.Parse(utf16.AsSpan(), null));
+
+        if (result2.Version == IpAddressVersion.None)
+        {
+            Assert.Throws<FormatException>(() => IpAddress.Parse(utf16));
+            Assert.Throws<FormatException>(() => IpAddress.Parse(utf16.AsSpan()));
+        }
 
         var utf8 = Encoding.UTF8.GetBytes(utf16);
 
@@ -193,6 +203,9 @@ public class IpAddressV4Test
         Assert.True(result.IsDefault);
         Assert.Throws<FormatException>(() => IpAddressV4.Parse(utf8));
         Assert.Throws<FormatException>(() => IpAddressV4.Parse(utf8, null));
+
+        if (result2.Version == IpAddressVersion.None)
+            Assert.Throws<FormatException>(() => IpAddress.Parse(utf8));
     }
 
     [Theory]

@@ -184,22 +184,37 @@ public class IpAddressV6Test
     {
         Assert.False(IpAddressV6.TryParse(utf16, out var result));
         Assert.False(IpAddressV6.TryParse(utf16, null, out result));
+        Assert.False(IpAddress.TryParse(utf16, out var result2) && result2.Version == IpAddressVersion.V6);
+        Assert.False(IpAddress.TryParse(utf16, null, out result2) && result2.Version == IpAddressVersion.V6);
         Assert.True(result.IsDefault);
         Assert.False(IpAddressV6.TryParse(utf16.AsSpan(), out result));
         Assert.False(IpAddressV6.TryParse(utf16.AsSpan(), null, out result));
+        Assert.False(IpAddress.TryParse(utf16.AsSpan(), out result2) && result2.Version == IpAddressVersion.V6);
+        Assert.False(IpAddress.TryParse(utf16.AsSpan(), null, out result2) && result2.Version == IpAddressVersion.V6);
         Assert.True(result.IsDefault);
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf16));
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf16, null));
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf16.AsSpan()));
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf16.AsSpan(), null));
 
+        if (result2.Version == IpAddressVersion.None)
+        {
+            Assert.Throws<FormatException>(() => IpAddress.Parse(utf16));
+            Assert.Throws<FormatException>(() => IpAddress.Parse(utf16.AsSpan()));
+        }
+
         var utf8 = Encoding.UTF8.GetBytes(utf16);
 
         Assert.False(IpAddressV6.TryParse(utf8, out result));
         Assert.False(IpAddressV6.TryParse(utf8, null, out result));
+        Assert.False(IpAddress.TryParse(utf8, out result2) && result2.Version == IpAddressVersion.V6);
+        Assert.False(IpAddress.TryParse(utf8, null, out result2) && result2.Version == IpAddressVersion.V6);
         Assert.True(result.IsDefault);
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf8));
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf8, null));
+        
+        if (result2.Version == IpAddressVersion.None)
+            Assert.Throws<FormatException>(() => IpAddress.Parse(utf8));
     }
 
     [Theory]

@@ -206,6 +206,35 @@ public readonly struct IpAddress :
 
     public static bool TryParse(ReadOnlySpan<byte> utf8Text, out IpAddress result) => TryParse(utf8Text, default, out result);
 
+    public static bool TryCreateNetwork(
+        IpAddress ipAddress,
+        int prefixLength,
+        out IpNetwork ipNetwork)
+    {
+        if (ipAddress.Version == IpAddressVersion.V4)
+        {
+            var result = IpAddressV4.TryCreateNetwork(
+                ipAddress.AsV4(),
+                prefixLength,
+                out var n);
+            ipNetwork = n;
+            return result;
+        }
+
+        if (ipAddress.Version == IpAddressVersion.V6)
+        {
+            var result = IpAddressV6.TryCreateNetwork(
+                ipAddress.AsV6(),
+                prefixLength,
+                out var n);
+            ipNetwork = n;
+            return result;
+        }
+
+        ipNetwork = default;
+        return false;
+    }
+
     public static implicit operator IPAddress?(IpAddress address)
     {
         var result = address.Version switch

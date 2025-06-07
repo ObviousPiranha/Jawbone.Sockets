@@ -32,7 +32,8 @@ public interface IIpAddress<TAddress> :
     static abstract bool TryParse(ReadOnlySpan<char> s, out TAddress result);
     static abstract TAddress Parse(ReadOnlySpan<byte> utf8Text);
     static abstract bool TryParse(ReadOnlySpan<byte> utf8Text, out TAddress result);
-    static abstract IpNetwork<TAddress> CreateNetwork(TAddress address, int prefixLength);
+    static abstract IpNetwork<TAddress> CreateNetwork(TAddress ipAddress, int prefixLength);
+    static abstract bool TryCreateNetwork(TAddress ipAddress, int prefixLength, out IpNetwork<TAddress> ipNetwork);
 
     static abstract explicit operator TAddress(IPAddress ipAddress);
     static abstract explicit operator IPAddress(TAddress ipAddress);

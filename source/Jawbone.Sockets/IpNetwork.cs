@@ -6,7 +6,9 @@ namespace Jawbone.Sockets;
 public readonly struct IpNetwork :
     IEquatable<IpNetwork>,
     ISpanFormattable,
-    IUtf8SpanFormattable
+    IUtf8SpanFormattable,
+    ISpanParsable<IpNetwork>,
+    IUtf8SpanParsable<IpNetwork>
 {
     public readonly IpAddress BaseAddress { get; }
     public readonly int PrefixLength { get; }
@@ -18,7 +20,7 @@ public readonly struct IpNetwork :
     }
 
     public readonly bool Equals(IpNetwork other) => BaseAddress == other.BaseAddress && PrefixLength == other.PrefixLength;
-    public override readonly bool Equals([MaybeNullWhen(false)] object? obj) => obj is IpNetwork other && Equals(other);
+    public override readonly bool Equals([NotNullWhen(false)] object? obj) => obj is IpNetwork other && Equals(other);
     public override readonly int GetHashCode() => HashCode.Combine(BaseAddress, PrefixLength);
     public override readonly string ToString() => SpanWriter.GetString(this);
 
@@ -54,6 +56,92 @@ public readonly struct IpNetwork :
         return result;
     }
 
+    public static IpNetwork Parse(
+        ReadOnlySpan<char> s,
+        IFormatProvider? provider = default)
+    {
+        if (!TryParse(s, provider, out var result))
+            throw new FormatException();
+        return result;
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<char> s,
+        IFormatProvider? provider,
+        out IpNetwork result)
+    {
+        var slash = s.LastIndexOf('/');
+        if (slash == -1 ||
+            !IpAddress.TryParse(s[..slash], out var ipAddress) ||
+            !int.TryParse(s.Slice(slash + 1), out var prefixLength) ||
+            !IpAddress.TryCreateNetwork(ipAddress, prefixLength, out result))
+        {
+            result = default;
+            return false;
+        }
+
+        return true;
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<char> s,
+        out IpNetwork result)
+    {
+        return TryParse(s, default, out result);
+    }
+
+    public static IpNetwork Parse(
+        string s,
+        IFormatProvider? provider = default)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        if (!TryParse(s.AsSpan(), provider, out var result))
+            throw new FormatException();
+        return result;
+    }
+
+    public static bool TryParse(
+        [NotNullWhen(true)] string? s,
+        IFormatProvider? provider,
+        out IpNetwork result)
+    {
+        return TryParse(s.AsSpan(), provider, out result);
+    }
+
+    public static IpNetwork Parse(
+        ReadOnlySpan<byte> utf8Text,
+        IFormatProvider? provider = default)
+    {
+        if (!TryParse(utf8Text, provider, out var result))
+            throw new FormatException();
+        return result;
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<byte> utf8Text,
+        IFormatProvider? provider,
+        [MaybeNullWhen(false)] out IpNetwork result)
+    {
+        var slash = utf8Text.LastIndexOf((byte)'/');
+        if (slash == -1 ||
+            !IpAddress.TryParse(utf8Text[..slash], out var ipAddress) ||
+            !int.TryParse(utf8Text.Slice(slash + 1), out var prefixLength) ||
+            !IpAddress.TryCreateNetwork(ipAddress, prefixLength, out result))
+        {
+            result = default;
+            return false;
+        }
+
+        return true;
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<byte> utf8Text,
+        out IpNetwork result)
+    {
+        return TryParse(utf8Text, default, out result);
+    }
+
     public static IpNetwork<TAddress> Create<TAddress>(TAddress address, int prefixLength)
         where TAddress : unmanaged, IIpAddress<TAddress>
     {
@@ -64,7 +152,9 @@ public readonly struct IpNetwork :
 public readonly struct IpNetwork<TAddress> :
     IEquatable<IpNetwork<TAddress>>,
     ISpanFormattable,
-    IUtf8SpanFormattable
+    IUtf8SpanFormattable,
+    ISpanParsable<IpNetwork<TAddress>>,
+    IUtf8SpanParsable<IpNetwork<TAddress>>
     where TAddress : unmanaged, IIpAddress<TAddress>
 {
     public readonly TAddress BaseAddress { get; }
@@ -114,6 +204,90 @@ public readonly struct IpNetwork<TAddress> :
     }
 
     public string ToString(string? format, IFormatProvider? formatProvider) => ToString();
+
+    public static IpNetwork<TAddress> Parse(
+        ReadOnlySpan<char> s,
+        IFormatProvider? provider = default)
+    {
+        if (!TryParse(s, provider, out var result))
+            throw new FormatException();
+        return result;
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<char> s,
+        IFormatProvider? provider,
+        out IpNetwork<TAddress> result)
+    {
+        var slash = s.LastIndexOf('/');
+        if (slash == -1 ||
+            !TAddress.TryParse(s[..slash], out var ipAddress) ||
+            !int.TryParse(s.Slice(slash + 1), out var prefixLength) ||
+            !TAddress.TryCreateNetwork(ipAddress, prefixLength, out result))
+        {
+            result = default;
+            return false;
+        }
+
+        return true;
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<char> s,
+        out IpNetwork<TAddress> result)
+    {
+        return TryParse(s, default, out result);
+    }
+
+    public static IpNetwork<TAddress> Parse(
+        string s,
+        IFormatProvider? provider = default)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        return Parse(s.AsSpan(), provider);
+    }
+
+    public static bool TryParse(
+        [NotNullWhen(true)] string? s,
+        IFormatProvider? provider,
+        out IpNetwork<TAddress> result)
+    {
+        return TryParse(s.AsSpan(), provider, out result);
+    }
+
+    public static IpNetwork<TAddress> Parse(
+        ReadOnlySpan<byte> utf8Text,
+        IFormatProvider? provider = default)
+    {
+        if (!TryParse(utf8Text, provider, out var result))
+            throw new FormatException();
+        return result;
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<byte> utf8Text,
+        IFormatProvider? provider,
+        out IpNetwork<TAddress> result)
+    {
+        var slash = utf8Text.LastIndexOf((byte)'/');
+        if (slash == -1 ||
+            !TAddress.TryParse(utf8Text[..slash], out var ipAddress) ||
+            !int.TryParse(utf8Text.Slice(slash + 1), out var prefixLength) ||
+            !TAddress.TryCreateNetwork(ipAddress, prefixLength, out result))
+        {
+            result = default;
+            return false;
+        }
+
+        return true;
+    }
+
+    public static bool TryParse(
+        ReadOnlySpan<byte> utf8Text,
+        out IpNetwork<TAddress> result)
+    {
+        return TryParse(utf8Text, default, out result);
+    }
 
     public static IpNetwork<TAddress> LinkLocal => TAddress.LinkLocalNetwork;
 

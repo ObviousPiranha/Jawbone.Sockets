@@ -742,19 +742,41 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
 
     public static bool TryParse(ReadOnlySpan<byte> s, out IpAddressV6 result) => TryParse(s, null, out result);
 
-    public static IpNetwork<IpAddressV6> CreateNetwork(IpAddressV6 address, int prefixLength)
+    public static IpNetwork<IpAddressV6> CreateNetwork(IpAddressV6 ipAddress, int prefixLength)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(prefixLength);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(prefixLength, 128);
-        address.GetU128(out var baseAddress);
+        ipAddress.GetU128(out var baseAddress);
         if (prefixLength == 0 && baseAddress != UInt128.Zero)
-            ThrowExceptionFor.InvalidNetwork(address, prefixLength);
+            ThrowExceptionFor.InvalidNetwork(ipAddress, prefixLength);
         var mask = UInt128.MaxValue << (128 - prefixLength);
         if (BitConverter.IsLittleEndian)
             mask = BinaryPrimitives.ReverseEndianness(mask);
         if ((baseAddress & mask) != baseAddress)
-            ThrowExceptionFor.InvalidNetwork(address, prefixLength);
-        return new(address, prefixLength);
+            ThrowExceptionFor.InvalidNetwork(ipAddress, prefixLength);
+        return new(ipAddress, prefixLength);
+    }
+
+    public static bool TryCreateNetwork(
+        IpAddressV6 ipAddress,
+        int prefixLength,
+        out IpNetwork<IpAddressV6> ipNetwork)
+    {
+        if (prefixLength < 0 || 128 < prefixLength)
+            goto failure;
+        ipAddress.GetU128(out var baseAddress);
+        if (prefixLength == 0 && baseAddress != UInt128.Zero)
+            goto failure;
+        var mask = UInt128.MaxValue << (128 - prefixLength);
+        if (BitConverter.IsLittleEndian)
+            mask = BinaryPrimitives.ReverseEndianness(mask);
+        if ((baseAddress & mask) != baseAddress)
+            goto failure;
+        ipNetwork = new(ipAddress, prefixLength);
+        return true;
+    failure:
+        ipNetwork = default;
+        return false;
     }
 
     public static IpAddressV6 FromBytes(params ReadOnlySpan<byte> bytes)

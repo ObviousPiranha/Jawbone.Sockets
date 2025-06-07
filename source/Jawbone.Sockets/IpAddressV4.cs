@@ -235,16 +235,35 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
 
     public static bool TryParse(ReadOnlySpan<byte> utf8Text, out IpAddressV4 result) => TryParse(utf8Text, null, out result);
 
-    public static IpNetwork<IpAddressV4> CreateNetwork(IpAddressV4 address, int prefixLength)
+    public static IpNetwork<IpAddressV4> CreateNetwork(IpAddressV4 ipAddress, int prefixLength)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(prefixLength);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(prefixLength, 32);
         var mask = (uint)((long)uint.MaxValue << (32 - prefixLength));
         if (BitConverter.IsLittleEndian)
             mask = BinaryPrimitives.ReverseEndianness(mask);
-        if ((address.DataU32 & mask) != address.DataU32)
-            ThrowExceptionFor.InvalidNetwork(address, prefixLength);
-        return new(address, prefixLength);
+        if ((ipAddress.DataU32 & mask) != ipAddress.DataU32)
+            ThrowExceptionFor.InvalidNetwork(ipAddress, prefixLength);
+        return new(ipAddress, prefixLength);
+    }
+
+    public static bool TryCreateNetwork(
+        IpAddressV4 ipAddress,
+        int prefixLength,
+        out IpNetwork<IpAddressV4> ipNetwork)
+    {
+        if (prefixLength < 0 || 32 < prefixLength)
+            goto failure;
+        var mask = (uint)((long)uint.MaxValue << (32 - prefixLength));
+        if (BitConverter.IsLittleEndian)
+            mask = BinaryPrimitives.ReverseEndianness(mask);
+        if ((ipAddress.DataU32 & mask) != ipAddress.DataU32)
+            goto failure;
+        ipNetwork = new(ipAddress, prefixLength);
+        return true;
+    failure:
+        ipNetwork = default;
+        return false;
     }
 
     public static explicit operator IpAddressV4(IPAddress ipAddress)

@@ -42,6 +42,11 @@ public interface IIpAddress<TAddress> :
     static abstract implicit operator IpAddress(TAddress ipAddress);
     static abstract explicit operator TAddress(IpAddress ipAddress);
 
+    static abstract TAddress operator |(TAddress a, TAddress b);
+    static abstract TAddress operator &(TAddress a, TAddress b);
+    static abstract TAddress operator ^(TAddress a, TAddress b);
+    static abstract TAddress operator ~(TAddress ipAddress);
+
     static abstract bool operator ==(TAddress a, TAddress b);
     static abstract bool operator !=(TAddress a, TAddress b);
 

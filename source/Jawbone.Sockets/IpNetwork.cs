@@ -147,6 +147,9 @@ public readonly struct IpNetwork :
     {
         return TAddress.CreateNetwork(ipAddress, prefixLength);
     }
+
+    public static bool operator ==(IpNetwork a, IpNetwork b) => a.Equals(b);
+    public static bool operator !=(IpNetwork a, IpNetwork b) => !a.Equals(b);
 }
 
 public readonly struct IpNetwork<TAddress> :

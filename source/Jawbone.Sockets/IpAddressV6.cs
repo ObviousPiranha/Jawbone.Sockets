@@ -893,6 +893,42 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         return ipAddress.AsV6();
     }
 
+    public static IpAddressV6 operator |(IpAddressV6 a, IpAddressV6 b)
+    {
+        a.DataU32[0] |= b.DataU32[0];
+        a.DataU32[1] |= b.DataU32[1];
+        a.DataU32[2] |= b.DataU32[2];
+        a.DataU32[3] |= b.DataU32[3];
+        return a;
+    }
+
+    public static IpAddressV6 operator &(IpAddressV6 a, IpAddressV6 b)
+    {
+        a.DataU32[0] &= b.DataU32[0];
+        a.DataU32[1] &= b.DataU32[1];
+        a.DataU32[2] &= b.DataU32[2];
+        a.DataU32[3] &= b.DataU32[3];
+        return a;
+    }
+
+    public static IpAddressV6 operator ^(IpAddressV6 a, IpAddressV6 b)
+    {
+        a.DataU32[0] ^= b.DataU32[0];
+        a.DataU32[1] ^= b.DataU32[1];
+        a.DataU32[2] ^= b.DataU32[2];
+        a.DataU32[3] ^= b.DataU32[3];
+        return a;
+    }
+
+    public static IpAddressV6 operator ~(IpAddressV6 ipAddress)
+    {
+        ipAddress.DataU32[0] = ~ipAddress.DataU32[0];
+        ipAddress.DataU32[1] = ~ipAddress.DataU32[1];
+        ipAddress.DataU32[2] = ~ipAddress.DataU32[2];
+        ipAddress.DataU32[3] = ~ipAddress.DataU32[3];
+        return ipAddress;
+    }
+
     public static bool operator ==(IpAddressV6 a, IpAddressV6 b) => a.Equals(b);
     public static bool operator !=(IpAddressV6 a, IpAddressV6 b) => !a.Equals(b);
 

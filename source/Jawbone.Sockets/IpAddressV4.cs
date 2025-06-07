@@ -294,6 +294,11 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
         return ipAddress.AsV4();
     }
 
+    public static IpAddressV4 operator |(IpAddressV4 a, IpAddressV4 b) => new(a.DataU32 | b.DataU32);
+    public static IpAddressV4 operator &(IpAddressV4 a, IpAddressV4 b) => new(a.DataU32 & b.DataU32);
+    public static IpAddressV4 operator ^(IpAddressV4 a, IpAddressV4 b) => new(a.DataU32 ^ b.DataU32);
+    public static IpAddressV4 operator ~(IpAddressV4 ipAddress) => new(~ipAddress.DataU32);
+
     public static bool operator ==(IpAddressV4 a, IpAddressV4 b) => a.Equals(b);
     public static bool operator !=(IpAddressV4 a, IpAddressV4 b) => !a.Equals(b);
 

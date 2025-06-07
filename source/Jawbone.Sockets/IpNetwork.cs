@@ -3,6 +3,64 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Jawbone.Sockets;
 
+public readonly struct IpNetwork :
+    IEquatable<IpNetwork>,
+    ISpanFormattable,
+    IUtf8SpanFormattable
+{
+    public readonly IpAddress BaseAddress { get; }
+    public readonly int PrefixLength { get; }
+
+    internal IpNetwork(IpAddress baseAddress, int prefixLength)
+    {
+        BaseAddress = baseAddress;
+        PrefixLength = prefixLength;
+    }
+
+    public readonly bool Equals(IpNetwork other) => BaseAddress == other.BaseAddress && PrefixLength == other.PrefixLength;
+    public override readonly bool Equals([MaybeNullWhen(false)] object? obj) => obj is IpNetwork other && Equals(other);
+    public override readonly int GetHashCode() => HashCode.Combine(BaseAddress, PrefixLength);
+    public override readonly string ToString() => SpanWriter.GetString(this);
+
+    public readonly bool TryFormat(
+        Span<char> destination,
+        out int charsWritten,
+        ReadOnlySpan<char> format = default,
+        IFormatProvider? provider = default)
+    {
+        var writer = SpanWriter.Create(destination);
+        var result =
+            writer.TryWriteFormattable(BaseAddress, format, provider) &&
+            writer.TryWrite('/') &&
+            writer.TryWriteFormattable(PrefixLength);
+        charsWritten = writer.Position;
+        return result;
+    }
+
+    public readonly string ToString(string? format, IFormatProvider? formatProvider) => ToString();
+
+    public readonly bool TryFormat(
+        Span<byte> utf8Destination,
+        out int bytesWritten,
+        ReadOnlySpan<char> format = default,
+        IFormatProvider? provider = default)
+    {
+        var writer = SpanWriter.Create(utf8Destination);
+        var result =
+            writer.TryWriteFormattable(BaseAddress, format, provider) &&
+            writer.TryWrite((byte)'/') &&
+            writer.TryWriteFormattable(PrefixLength);
+        bytesWritten = writer.Position;
+        return result;
+    }
+
+    public static IpNetwork<TAddress> Create<TAddress>(TAddress address, int prefixLength)
+        where TAddress : unmanaged, IIpAddress<TAddress>
+    {
+        return TAddress.CreateNetwork(address, prefixLength);
+    }
+}
+
 public readonly struct IpNetwork<TAddress> :
     IEquatable<IpNetwork<TAddress>>,
     ISpanFormattable,
@@ -28,8 +86,8 @@ public readonly struct IpNetwork<TAddress> :
     public readonly bool TryFormat(
         Span<byte> utf8Destination,
         out int bytesWritten,
-        ReadOnlySpan<char> format,
-        IFormatProvider? provider)
+        ReadOnlySpan<char> format = default,
+        IFormatProvider? provider = default)
     {
         var writer = SpanWriter.Create(utf8Destination);
         var result =
@@ -59,15 +117,9 @@ public readonly struct IpNetwork<TAddress> :
 
     public static IpNetwork<TAddress> LinkLocal => TAddress.LinkLocalNetwork;
 
+    public static implicit operator IpNetwork(IpNetwork<TAddress> ipNetwork) => new(ipNetwork.BaseAddress, ipNetwork.PrefixLength);
+    public static explicit operator IpNetwork<TAddress>(IpNetwork ipNetwork) => new((TAddress)ipNetwork.BaseAddress, ipNetwork.PrefixLength);
+
     public static bool operator ==(IpNetwork<TAddress> a, IpNetwork<TAddress> b) => a.Equals(b);
     public static bool operator !=(IpNetwork<TAddress> a, IpNetwork<TAddress> b) => !a.Equals(b);
-}
-
-public static class IpNetwork
-{
-    public static IpNetwork<TAddress> Create<TAddress>(TAddress address, int prefixLength)
-        where TAddress : unmanaged, IIpAddress<TAddress>
-    {
-        return TAddress.CreateNetwork(address, prefixLength);
-    }
 }

@@ -3,6 +3,14 @@ using Jawbone.Sockets;
 using System;
 
 {
+    IpNetwork v4 = IpAddressV4.LinkLocalNetwork;
+    Console.WriteLine(v4);
+    IpNetwork v6 = IpAddressV6.LinkLocalNetwork;
+    Console.WriteLine(v6);
+    Environment.Exit(0);
+}
+
+{
     var e4 = IpAddressV4.Local.OnPort(5555);
     var e6 = IpAddressV6.Local.OnPort(5555);
     Console.WriteLine(e4);

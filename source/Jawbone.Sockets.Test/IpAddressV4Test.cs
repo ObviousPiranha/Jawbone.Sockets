@@ -169,6 +169,7 @@ public class IpAddressV4Test
     [InlineData(" 127.0.0.1")]
     [InlineData("127.0.0.1 ")]
     [InlineData("127.0.0.")]
+    [InlineData("192.168..1")]
     [InlineData("1,1,1,1")]
     [InlineData("253.254.255.256")]
     [InlineData("1.2.3.4.5")]

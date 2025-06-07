@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Text;
 
 namespace Jawbone.Sockets;
@@ -36,7 +37,8 @@ public static class StringBuilderExtensions
     private static StringBuilder AppendFormattable<T>(StringBuilder builder, T item) where T : ISpanFormattable
     {
         Span<char> buffer = stackalloc char[64];
-        _ = item.TryFormat(buffer, out var n, default, default);
+        var formatted = item.TryFormat(buffer, out var n, default, default);
+        Debug.Assert(formatted);
         return builder.Append(buffer[..n]);
     }
 }

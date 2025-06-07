@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 
 namespace Jawbone.Sockets;
 
@@ -84,7 +85,8 @@ static class SpanWriter
     public static string GetString<T>(T item, int bufferSize = 64) where T : ISpanFormattable
     {
         Span<char> buffer = stackalloc char[bufferSize];
-        _ = item.TryFormat(buffer, out var n, default, default);
+        var formatted = item.TryFormat(buffer, out var n, default, default);
+        Debug.Assert(formatted);
         return buffer[..n].ToString();
     }
 }

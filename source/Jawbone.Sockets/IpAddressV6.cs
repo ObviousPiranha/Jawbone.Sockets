@@ -54,6 +54,7 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
     public static IpAddressV6 Any => default;
     public static IpAddressV6 Local { get; } = CreateLocal();
     public static IpAddressVersion Version => IpAddressVersion.V6;
+    public static int MaxPrefixLength => 128;
     // https://en.wikipedia.org/wiki/IPv6#Link-local_address
     public static IpNetwork<IpAddressV6> LinkLocalNetwork => new(IpAddressV6.FromBytes(0xfe, 0x80), 10);
 

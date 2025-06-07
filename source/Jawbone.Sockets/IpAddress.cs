@@ -206,6 +206,25 @@ public readonly struct IpAddress :
 
     public static bool TryParse(ReadOnlySpan<byte> utf8Text, out IpAddress result) => TryParse(utf8Text, default, out result);
 
+    public static IpNetwork CreateNetwork(
+        IpAddress ipAddress,
+        int prefixLength)
+    {
+        if (ipAddress.Version == IpAddressVersion.V4)
+        {
+            var result = CreateNetwork(ipAddress.AsV4(), prefixLength);
+            return result;
+        }
+
+        if (ipAddress.Version == IpAddressVersion.V6)
+        {
+            var result = CreateNetwork(ipAddress.AsV6(), prefixLength);
+            return result;
+        }
+
+        throw new ArgumentException("IP address must be v4 or v6.");
+    }
+
     public static bool TryCreateNetwork(
         IpAddress ipAddress,
         int prefixLength,

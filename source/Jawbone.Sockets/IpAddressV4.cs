@@ -45,6 +45,7 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
     public static IpAddressV4 Local { get; } = new(127, 0, 0, 1);
     public static IpAddressV4 Broadcast { get; } = new(255, 255, 255, 255);
     public static IpAddressVersion Version => IpAddressVersion.V4;
+    public static int MaxPrefixLength => 32;
     // https://en.wikipedia.org/wiki/IPv4#Link-local_addressing
     public static IpNetwork<IpAddressV4> LinkLocalNetwork => new(new IpAddressV4(169, 254, 0, 0), 16);
 

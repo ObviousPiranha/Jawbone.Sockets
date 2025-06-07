@@ -261,6 +261,21 @@ public class IpAddressV6Test
         Assert.Throws<InvalidCastException>(() => (IpAddressV4)dotNetIpAddress);
     }
 
+    [Theory]
+    [MemberData(nameof(Addresses))]
+    public void IpNetworkOfAddressContainsAddress(IpAddressV6 ipAddress, string _)
+    {
+        var ipNetwork = IpNetwork.Create(ipAddress, IpAddressV6.MaxPrefixLength);
+        Assert.True(ipNetwork.Contains(ipAddress));
+    }
+
+    [Theory]
+    [MemberData(nameof(Addresses))]
+    public void EmptyIpNetworkContainsAddress(IpAddressV6 ipAddress, string _)
+    {
+        Assert.True(default(IpNetwork<IpAddressV6>).Contains(ipAddress));
+    }
+
     public static TheoryData<IpAddressV6, string> Addresses => new()
     {
         { IpAddressV6.Any, "::" },

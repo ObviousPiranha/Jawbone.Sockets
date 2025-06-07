@@ -142,10 +142,10 @@ public readonly struct IpNetwork :
         return TryParse(utf8Text, default, out result);
     }
 
-    public static IpNetwork<TAddress> Create<TAddress>(TAddress address, int prefixLength)
+    public static IpNetwork<TAddress> Create<TAddress>(TAddress ipAddress, int prefixLength)
         where TAddress : unmanaged, IIpAddress<TAddress>
     {
-        return TAddress.CreateNetwork(address, prefixLength);
+        return TAddress.CreateNetwork(ipAddress, prefixLength);
     }
 }
 

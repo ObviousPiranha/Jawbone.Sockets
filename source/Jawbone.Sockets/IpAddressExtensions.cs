@@ -28,4 +28,14 @@ public static class IpAddressExtensions
     public static IpEndpoint OnAnyPort(this IpAddress address) => new(address, default(NetworkPort));
     public static IpEndpoint OnPort(this IpAddress address, int port) => new(address, port);
     public static IpEndpoint OnPort(this IpAddress address, NetworkPort port) => new(address, port);
+
+    public static IpNetwork<TAddress> WithPrefix<TAddress>(
+        this TAddress ipAddress,
+        int prefixLength
+        ) where TAddress : unmanaged, IIpAddress<TAddress>
+    {
+        return TAddress.CreateNetwork(ipAddress, prefixLength);
+    }
+
+    public static IpNetwork WithPrefix(this IpAddress ipAddress, int prefixLength) => IpAddress.CreateNetwork(ipAddress, prefixLength);
 }

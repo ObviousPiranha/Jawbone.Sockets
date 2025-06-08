@@ -140,7 +140,7 @@ sealed class MacUdpSocketV6 : IUdpSocket<IpAddressV6>
 
         try
         {
-            So.SetReuseAddr(fd, !socketOptions.All(SocketOptions.DoNotReuseAddress));
+            So.SetReuseAddr(fd, socketOptions.None(SocketOptions.DoNotReuseAddress));
             var sa = SockAddrIn6.FromEndpoint(endpoint);
             var bindResult = Sys.BindV6(fd, sa, SockAddrIn6.Len);
 

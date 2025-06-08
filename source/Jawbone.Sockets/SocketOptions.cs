@@ -6,26 +6,32 @@ namespace Jawbone.Sockets;
 public enum SocketOptions
 {
     None,
-    ThrowExceptionForIrrelevantOptions = 1 << 0,
+    EnableUdpBroadcast = 1 << 0,
     DoNotReuseAddress = 1 << 1,
     DisableTcpNoDelay = 1 << 2,
-    EnableDualMode = 1 << 3,
-    EnableUdpBroadcast = 1 << 4
+    EnableDualMode = 1 << 3
 }
 
 public static class SocketOptionsExtensions
 {
     public static bool All(
         this SocketOptions source,
-        SocketOptions options)
+        SocketOptions mask)
     {
-        return (source & options) == options;
+        return (source & mask) == mask;
     }
 
     public static bool Any(
         this SocketOptions source,
-        SocketOptions options)
+        SocketOptions mask)
     {
-        return (source & options) != SocketOptions.None;
+        return (source & mask) != SocketOptions.None;
+    }
+
+    public static bool None(
+        this SocketOptions source,
+        SocketOptions mask)
+    {
+        return (source & mask) == SocketOptions.None;
     }
 }

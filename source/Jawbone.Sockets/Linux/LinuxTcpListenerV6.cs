@@ -112,7 +112,7 @@ sealed class LinuxTcpListenerV6 : ITcpListener<IpAddressV6>
         try
         {
             Ipv6.SetIpv6Only(fd, socketOptions.All(SocketOptions.EnableDualMode));
-            So.SetReuseAddr(fd, !socketOptions.All(SocketOptions.DoNotReuseAddress));
+            So.SetReuseAddr(fd, socketOptions.None(SocketOptions.DoNotReuseAddress));
             var sa = SockAddrIn6.FromEndpoint(bindEndpoint);
             var bindResult = Sys.BindV6(fd, sa, SockAddrIn6.Len);
 

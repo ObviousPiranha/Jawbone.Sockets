@@ -111,7 +111,7 @@ sealed class WindowsTcpListenerV4 : ITcpListener<IpAddressV4>
 
         try
         {
-            So.SetReuseAddr(fd, !socketOptions.All(SocketOptions.DoNotReuseAddress));
+            So.SetReuseAddr(fd, socketOptions.None(SocketOptions.DoNotReuseAddress));
             var sa = SockAddrIn.FromEndpoint(bindEndpoint);
             var bindResult = Sys.BindV4(fd, sa, SockAddrIn.Len);
 

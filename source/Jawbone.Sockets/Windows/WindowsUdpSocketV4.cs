@@ -140,7 +140,8 @@ sealed class WindowsUdpSocketV4 : IUdpSocket<IpAddressV4>
 
         try
         {
-            So.SetReuseAddr(socket, !socketOptions.All(SocketOptions.DoNotReuseAddress));
+            So.SetReuseAddr(socket, socketOptions.None(SocketOptions.DoNotReuseAddress));
+            So.SetBroadcast(socket, socketOptions.All(SocketOptions.EnableUdpBroadcast));
             var sa = SockAddrIn.FromEndpoint(endpoint);
             var bindResult = Sys.BindV4(socket, sa, SockAddrIn.Len);
 

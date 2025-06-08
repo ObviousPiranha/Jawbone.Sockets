@@ -134,7 +134,7 @@ sealed class MacTcpClientV6 : ITcpClient<IpAddressV6>
 
         try
         {
-            Tcp.SetNoDelay(fd, !socketOptions.All(SocketOptions.DisableTcpNoDelay));
+            Tcp.SetNoDelay(fd, socketOptions.None(SocketOptions.DisableTcpNoDelay));
             var addr = SockAddrIn6.FromEndpoint(ipEndpoint);
             var connectResult = Sys.ConnectV6(fd, addr, SockAddrIn6.Len);
             if (connectResult == -1)

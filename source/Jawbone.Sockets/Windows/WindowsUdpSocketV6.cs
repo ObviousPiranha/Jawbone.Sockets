@@ -141,7 +141,7 @@ sealed class WindowsUdpSocketV6 : IUdpSocket<IpAddressV6>
 
         try
         {
-            So.SetReuseAddr(socket, !socketOptions.All(SocketOptions.DoNotReuseAddress));
+            So.SetReuseAddr(socket, socketOptions.None(SocketOptions.DoNotReuseAddress));
             var sa = SockAddrIn6.FromEndpoint(endpoint);
             var bindResult = Sys.BindV6(socket, sa, SockAddrIn6.Len);
 

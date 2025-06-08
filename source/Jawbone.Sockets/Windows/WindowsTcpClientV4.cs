@@ -134,7 +134,7 @@ sealed class WindowsTcpClientV4 : ITcpClient<IpAddressV4>
 
         try
         {
-            Tcp.SetNoDelay(fd, !socketOptions.All(SocketOptions.DisableTcpNoDelay));
+            Tcp.SetNoDelay(fd, socketOptions.None(SocketOptions.DisableTcpNoDelay));
             var addr = SockAddrIn.FromEndpoint(ipEndpoint);
             var result = Sys.ConnectV4(fd, addr, SockAddrIn.Len);
             if (result == -1)

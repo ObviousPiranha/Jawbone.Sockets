@@ -49,6 +49,23 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
     // https://en.wikipedia.org/wiki/IPv4#Link-local_addressing
     public static IpNetwork<IpAddressV4> LinkLocalNetwork => new(new IpAddressV4(169, 254, 0, 0), 16);
 
+    public static IpAddressV4 GetMaxAddress(IpNetwork<IpAddressV4> ipNetwork)
+    {
+        if (ipNetwork.PrefixLength < 1)
+        {
+            var result = new IpAddressV4(uint.MaxValue);
+            return result;
+        }
+        else
+        {
+            var mask = ~(uint.MaxValue << (MaxPrefixLength - ipNetwork.PrefixLength));
+            if (BitConverter.IsLittleEndian)
+                mask = BinaryPrimitives.ReverseEndianness(mask);
+            var result = ipNetwork.BaseAddress | new IpAddressV4(mask);
+            return result;
+        }
+    }
+
     [FieldOffset(0)]
     public ArrayU8 DataU8;
 

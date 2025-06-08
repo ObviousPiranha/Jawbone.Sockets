@@ -120,7 +120,7 @@ public readonly struct IpNetwork :
     public static bool TryParse(
         ReadOnlySpan<byte> utf8Text,
         IFormatProvider? provider,
-        [MaybeNullWhen(false)] out IpNetwork result)
+        out IpNetwork result)
     {
         var slash = utf8Text.LastIndexOf((byte)'/');
         if (slash == -1 ||
@@ -162,6 +162,7 @@ public readonly struct IpNetwork<TAddress> :
 {
     public readonly TAddress BaseAddress { get; }
     public readonly int PrefixLength { get; }
+    public TAddress MaxAddress => TAddress.GetMaxAddress(this);
 
     internal IpNetwork(TAddress baseAddress, int prefixLength)
     {

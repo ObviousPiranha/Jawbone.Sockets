@@ -29,6 +29,7 @@ public interface IIpAddress<TAddress> :
     static abstract IpAddressVersion Version { get; }
     static abstract int MaxPrefixLength { get; }
     static abstract IpNetwork<TAddress> LinkLocalNetwork { get; }
+    static abstract TAddress GetMaxAddress(IpNetwork<TAddress> ipNetwork);
     static abstract TAddress Parse(ReadOnlySpan<char> s);
     static abstract bool TryParse(ReadOnlySpan<char> s, out TAddress result);
     static abstract TAddress Parse(ReadOnlySpan<byte> utf8Text);

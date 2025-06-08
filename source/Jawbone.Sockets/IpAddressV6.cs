@@ -56,7 +56,29 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
     public static IpAddressVersion Version => IpAddressVersion.V6;
     public static int MaxPrefixLength => 128;
     // https://en.wikipedia.org/wiki/IPv6#Link-local_address
-    public static IpNetwork<IpAddressV6> LinkLocalNetwork => new(IpAddressV6.FromBytes(0xfe, 0x80), 10);
+    public static IpNetwork<IpAddressV6> LinkLocalNetwork => new(FromBytes(0xfe, 0x80), 10);
+
+    public static IpAddressV6 GetMaxAddress(IpNetwork<IpAddressV6> ipNetwork)
+    {
+        if (ipNetwork.PrefixLength < 1)
+        {
+            var result = new IpAddressV6(
+                uint.MaxValue,
+                uint.MaxValue,
+                uint.MaxValue,
+                uint.MaxValue,
+                ipNetwork.BaseAddress.ScopeId);
+            return result;
+        }
+        else
+        {
+            var mask = ~(UInt128.MaxValue << (MaxPrefixLength - ipNetwork.PrefixLength));
+            if (BitConverter.IsLittleEndian)
+                mask = BinaryPrimitives.ReverseEndianness(mask);
+            var result = ipNetwork.BaseAddress | new IpAddressV6(mask);
+            return result;
+        }
+    }
 
     private static readonly uint PrefixV4 = BitConverter.IsLittleEndian ? 0xffff0000 : 0x0000ffff;
 
@@ -102,15 +124,21 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         ScopeId = scopeId;
     }
 
-    private readonly void GetU128(out UInt128 u128) => u128 = BitConverter.ToUInt128(DataU8);
+    private IpAddressV6(UInt128 data, uint scopeId = 0)
+    {
+        _ = BitConverter.TryWriteBytes(DataU8, data);
+        ScopeId = scopeId;
+    }
+
+    private readonly UInt128 GetU128() => BitConverter.ToUInt128(DataU8);
 
     public readonly bool IsInNetwork(IpNetwork<IpAddressV6> ipNetwork)
     {
         if (ipNetwork.PrefixLength == 0)
             return true;
-        GetU128(out var address);
-        ipNetwork.BaseAddress.GetU128(out var baseAddress);
-        var mask = UInt128.MaxValue << (128 - ipNetwork.PrefixLength);
+        var address = GetU128();
+        var baseAddress = ipNetwork.BaseAddress.GetU128();
+        var mask = UInt128.MaxValue << (MaxPrefixLength - ipNetwork.PrefixLength);
         if (BitConverter.IsLittleEndian)
             mask = BinaryPrimitives.ReverseEndianness(mask);
         return (address & mask) == baseAddress;
@@ -746,11 +774,11 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
     public static IpNetwork<IpAddressV6> CreateNetwork(IpAddressV6 ipAddress, int prefixLength)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(prefixLength);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(prefixLength, 128);
-        ipAddress.GetU128(out var baseAddress);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(prefixLength, MaxPrefixLength);
+        var baseAddress = ipAddress.GetU128();
         if (prefixLength == 0 && baseAddress != UInt128.Zero)
             ThrowExceptionFor.InvalidNetwork(ipAddress, prefixLength);
-        var mask = UInt128.MaxValue << (128 - prefixLength);
+        var mask = UInt128.MaxValue << (MaxPrefixLength - prefixLength);
         if (BitConverter.IsLittleEndian)
             mask = BinaryPrimitives.ReverseEndianness(mask);
         if ((baseAddress & mask) != baseAddress)
@@ -763,12 +791,12 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         int prefixLength,
         out IpNetwork<IpAddressV6> ipNetwork)
     {
-        if (prefixLength < 0 || 128 < prefixLength)
+        if (prefixLength < 0 || MaxPrefixLength < prefixLength)
             goto failure;
-        ipAddress.GetU128(out var baseAddress);
+        var baseAddress = ipAddress.GetU128();
         if (prefixLength == 0 && baseAddress != UInt128.Zero)
             goto failure;
-        var mask = UInt128.MaxValue << (128 - prefixLength);
+        var mask = UInt128.MaxValue << (MaxPrefixLength - prefixLength);
         if (BitConverter.IsLittleEndian)
             mask = BinaryPrimitives.ReverseEndianness(mask);
         if ((baseAddress & mask) != baseAddress)

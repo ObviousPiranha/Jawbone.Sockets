@@ -2,6 +2,12 @@ namespace Jawbone.Sockets;
 
 public static class IpAddressExtensions
 {
+    public static IpAddressV6 WithScopeId(this IpAddressV6 ipAddress, uint scopeId)
+    {
+        ipAddress.ScopeId = scopeId;
+        return ipAddress;
+    }
+    
     public static IpEndpoint<TAddress> OnAnyPort<TAddress>(
         this TAddress address
         ) where TAddress : unmanaged, IIpAddress<TAddress>

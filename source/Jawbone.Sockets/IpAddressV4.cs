@@ -84,15 +84,15 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
         DataU32 = BitConverter.ToUInt32(values);
     }
 
-    public IpAddressV4(byte a, byte b, byte c, byte d)
+    public IpAddressV4(byte b0, byte b1, byte b2, byte b3)
     {
-        DataU8[0] = a;
-        DataU8[1] = b;
-        DataU8[2] = c;
-        DataU8[3] = d;
+        DataU8[0] = b0;
+        DataU8[1] = b1;
+        DataU8[2] = b2;
+        DataU8[3] = b3;
     }
 
-    public IpAddressV4(uint address) => DataU32 = address;
+    internal IpAddressV4(uint address) => DataU32 = address;
 
     public readonly bool IsInNetwork(IpNetwork<IpAddressV4> ipNetwork)
     {
@@ -283,6 +283,26 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
         ipNetwork = default;
         return false;
     }
+
+    public static IpAddressV4 Create(
+        byte b0 = 0,
+        byte b1 = 0,
+        byte b2 = 0,
+        byte b3 = 0)
+    {
+        return new(b0, b1, b2, b3);
+    }
+
+    public static IpAddressV4 FromHostU32(uint hostValue)
+    {
+        var networkValue = BitConverter.IsLittleEndian ?
+            BinaryPrimitives.ReverseEndianness(hostValue) :
+            hostValue;
+        var result = new IpAddressV4(networkValue);
+        return result;
+    }
+
+    public static IpAddressV4 FromNetworkU32(uint networkValue) => new(networkValue);
 
     public static explicit operator IpAddressV4(IPAddress ipAddress)
     {

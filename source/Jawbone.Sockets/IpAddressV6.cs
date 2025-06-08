@@ -1036,6 +1036,19 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
             throw new PlatformNotSupportedException();
     }
 
+    public static IUdpClient<IpAddressV6> ConnectUdpClient(
+        IpEndpoint<IpAddressV6> ipEndpoint,
+        SocketOptions socketOptions = default)
+    {
+        if (OperatingSystem.IsWindows())
+            return Windows.WindowsUdpClientV6.Connect(ipEndpoint, socketOptions);
+        if (OperatingSystem.IsMacOS())
+            return Mac.MacUdpClientV6.Connect(ipEndpoint, socketOptions);
+        if (OperatingSystem.IsLinux())
+            return Linux.LinuxUdpClientV6.Connect(ipEndpoint, socketOptions);
+        throw new PlatformNotSupportedException();
+    }
+
     public static ITcpListener<IpAddressV6> TcpListen(
         IpEndpoint<IpAddressV6> bindEndpoint,
         int backlog,
@@ -1048,6 +1061,19 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
             return Mac.MacTcpListenerV6.Listen(bindEndpoint, backlog, socketOptions);
         if (OperatingSystem.IsLinux())
             return Linux.LinuxTcpListenerV6.Listen(bindEndpoint, backlog, socketOptions);
+        throw new PlatformNotSupportedException();
+    }
+
+    public static ITcpClient<IpAddressV6> ConnectTcpClient(
+        IpEndpoint<IpAddressV6> ipEndpoint,
+        SocketOptions socketOptions = default)
+    {
+        if (OperatingSystem.IsWindows())
+            return Windows.WindowsTcpClientV6.Connect(ipEndpoint, socketOptions);
+        if (OperatingSystem.IsMacOS())
+            return Mac.MacTcpClientV6.Connect(ipEndpoint, socketOptions);
+        if (OperatingSystem.IsLinux())
+            return Linux.LinuxTcpClientV6.Connect(ipEndpoint, socketOptions);
         throw new PlatformNotSupportedException();
     }
 

@@ -122,21 +122,23 @@ sealed class MacUdpClientV4 : IUdpClient<IpAddressV4>
         return new((int)result);
     }
 
-    public static MacUdpClientV4 Connect(IpEndpoint<IpAddressV4> endpoint)
+    public static MacUdpClientV4 Connect(
+        IpEndpoint<IpAddressV4> ipEndpoint,
+        SocketOptions socketOptions)
     {
         var fd = CreateSocket();
 
         try
         {
-            var sa = SockAddrIn.FromEndpoint(endpoint);
+            var sa = SockAddrIn.FromEndpoint(ipEndpoint);
             var result = Sys.ConnectV4(fd, sa, SockAddrIn.Len);
             if (result == -1)
             {
                 var errNo = Sys.ErrNo();
-                Sys.Throw(errNo, $"Failed to connect to {endpoint}.");
+                Sys.Throw(errNo, $"Failed to connect to {ipEndpoint}.");
             }
 
-            return new MacUdpClientV4(fd, endpoint);
+            return new MacUdpClientV4(fd, ipEndpoint);
         }
         catch
         {

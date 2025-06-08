@@ -122,21 +122,23 @@ sealed class WindowsUdpClientV6 : IUdpClient<IpAddressV6>
         return new(result);
     }
 
-    public static WindowsUdpClientV6 Connect(IpEndpoint<IpAddressV6> endpoint)
+    public static WindowsUdpClientV6 Connect(
+        IpEndpoint<IpAddressV6> ipEndpoint,
+        SocketOptions socketOptions)
     {
         var fd = CreateSocket();
 
         try
         {
-            var sa = SockAddrIn6.FromEndpoint(endpoint);
+            var sa = SockAddrIn6.FromEndpoint(ipEndpoint);
             var result = Sys.ConnectV6(fd, sa, SockAddrIn6.Len);
             if (result == -1)
             {
                 var error = Sys.WsaGetLastError();
-                Sys.Throw(error, $"Failed to connect to {endpoint}.");
+                Sys.Throw(error, $"Failed to connect to {ipEndpoint}.");
             }
 
-            return new WindowsUdpClientV6(fd, endpoint);
+            return new WindowsUdpClientV6(fd, ipEndpoint);
         }
         catch
         {

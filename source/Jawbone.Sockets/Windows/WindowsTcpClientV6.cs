@@ -123,7 +123,9 @@ sealed class WindowsTcpClientV6 : ITcpClient<IpAddressV6>
         return address.GetV6(addressLength);
     }
 
-    public static WindowsTcpClientV6 Connect(IpEndpoint<IpAddressV6> endpoint)
+    public static WindowsTcpClientV6 Connect(
+        IpEndpoint<IpAddressV6> ipEndpoint,
+        SocketOptions socketOptions)
     {
         var fd = Sys.Socket(Af.INet6, Sock.Stream, 0);
 
@@ -132,16 +134,16 @@ sealed class WindowsTcpClientV6 : ITcpClient<IpAddressV6>
 
         try
         {
-            Tcp.SetNoDelay(fd);
-            var addr = SockAddrIn6.FromEndpoint(endpoint);
+            Tcp.SetNoDelay(fd, !socketOptions.All(SocketOptions.DisableTcpNoDelay));
+            var addr = SockAddrIn6.FromEndpoint(ipEndpoint);
             var connectResult = Sys.ConnectV6(fd, addr, SockAddrIn6.Len);
             if (connectResult == -1)
             {
                 var error = Sys.WsaGetLastError();
-                Sys.Throw(error, $"Failed to connect to {endpoint}.");
+                Sys.Throw(error, $"Failed to connect to {ipEndpoint}.");
             }
 
-            return new WindowsTcpClientV6(fd, endpoint);
+            return new WindowsTcpClientV6(fd, ipEndpoint);
         }
         catch
         {

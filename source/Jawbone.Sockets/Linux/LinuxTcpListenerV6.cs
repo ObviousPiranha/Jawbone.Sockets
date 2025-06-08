@@ -5,11 +5,18 @@ namespace Jawbone.Sockets.Linux;
 sealed class LinuxTcpListenerV6 : ITcpListener<IpAddressV6>
 {
     private readonly int _fd;
+    private readonly SocketOptions _socketOptions;
 
     public InterruptHandling HandleInterruptOnAccept { get; set; }
     public bool WasInterrupted { get; private set; }
 
-    private LinuxTcpListenerV6(int fd) => _fd = fd;
+    private LinuxTcpListenerV6(
+        int fd,
+        SocketOptions socketOptions)
+    {
+        _fd = fd;
+        _socketOptions = socketOptions;
+    }
 
     public ITcpClient<IpAddressV6>? Accept(int timeoutInMilliseconds)
     {
@@ -40,7 +47,7 @@ sealed class LinuxTcpListenerV6 : ITcpListener<IpAddressV6>
 
                 try
                 {
-                    Tcp.SetNoDelay(fd);
+                    Tcp.SetNoDelay(fd, !_socketOptions.All(SocketOptions.DisableTcpNoDelay));
                     var endpoint = address.GetV6(addressLength);
                     var result = new LinuxTcpClientV6(fd, endpoint);
                     return result;
@@ -123,7 +130,7 @@ sealed class LinuxTcpListenerV6 : ITcpListener<IpAddressV6>
                 Sys.Throw(errNo, $"Failed to listen on socket bound to {bindEndpoint}.");
             }
 
-            return new LinuxTcpListenerV6(fd);
+            return new LinuxTcpListenerV6(fd, socketOptions);
         }
         catch
         {

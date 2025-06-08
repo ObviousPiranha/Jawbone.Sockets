@@ -121,7 +121,9 @@ sealed class MacTcpClientV4 : ITcpClient<IpAddressV4>
         return address.GetV4(addressLength);
     }
 
-    public static MacTcpClientV4 Connect(IpEndpoint<IpAddressV4> endpoint)
+    public static MacTcpClientV4 Connect(
+        IpEndpoint<IpAddressV4> ipEndpoint,
+        SocketOptions socketOptions)
     {
         int fd = Sys.Socket(Af.INet, Sock.Stream, 0);
 
@@ -130,16 +132,16 @@ sealed class MacTcpClientV4 : ITcpClient<IpAddressV4>
 
         try
         {
-            Tcp.SetNoDelay(fd);
-            var addr = SockAddrIn.FromEndpoint(endpoint);
+            Tcp.SetNoDelay(fd, !socketOptions.All(SocketOptions.DisableTcpNoDelay));
+            var addr = SockAddrIn.FromEndpoint(ipEndpoint);
             var result = Sys.ConnectV4(fd, addr, SockAddrIn.Len);
             if (result == -1)
             {
                 var errNo = Sys.ErrNo();
-                Sys.Throw(errNo, $"Failed to connect to {endpoint}.");
+                Sys.Throw(errNo, $"Failed to connect to {ipEndpoint}.");
             }
 
-            return new MacTcpClientV4(fd, endpoint);
+            return new MacTcpClientV4(fd, ipEndpoint);
         }
         catch
         {

@@ -123,21 +123,23 @@ sealed class WindowsUdpClientV4 : IUdpClient<IpAddressV4>
         return new(result);
     }
 
-    public static WindowsUdpClientV4 Connect(IpEndpoint<IpAddressV4> endpoint)
+    public static WindowsUdpClientV4 Connect(
+        IpEndpoint<IpAddressV4> ipEndpoint,
+        SocketOptions socketOptions)
     {
         var fd = CreateSocket();
 
         try
         {
-            var sa = SockAddrIn.FromEndpoint(endpoint);
+            var sa = SockAddrIn.FromEndpoint(ipEndpoint);
             var result = Sys.ConnectV4(fd, sa, SockAddrIn.Len);
             if (result == -1)
             {
                 var error = Sys.WsaGetLastError();
-                Sys.Throw(error, $"Failed to connect to {endpoint}.");
+                Sys.Throw(error, $"Failed to connect to {ipEndpoint}.");
             }
 
-            return new WindowsUdpClientV4(fd, endpoint);
+            return new WindowsUdpClientV4(fd, ipEndpoint);
         }
         catch
         {

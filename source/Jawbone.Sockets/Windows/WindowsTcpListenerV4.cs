@@ -5,11 +5,18 @@ namespace Jawbone.Sockets.Windows;
 sealed class WindowsTcpListenerV4 : ITcpListener<IpAddressV4>
 {
     private readonly nuint _fd;
+    private readonly SocketOptions _socketOptions;
 
     public InterruptHandling HandleInterruptOnAccept { get; set; }
     public bool WasInterrupted { get; private set; }
 
-    private WindowsTcpListenerV4(nuint fd) => _fd = fd;
+    private WindowsTcpListenerV4(
+        nuint fd,
+        SocketOptions socketOptions)
+    {
+        _fd = fd;
+        _socketOptions = socketOptions;
+    }
 
     public ITcpClient<IpAddressV4>? Accept(int timeoutInMilliseconds)
     {
@@ -40,7 +47,7 @@ sealed class WindowsTcpListenerV4 : ITcpListener<IpAddressV4>
 
                 try
                 {
-                    Tcp.SetNoDelay(fd);
+                    Tcp.SetNoDelay(fd, !_socketOptions.All(SocketOptions.DisableTcpNoDelay));
                     var endpoint = address.GetV4(addressLength);
                     var result = new WindowsTcpClientV4(fd, endpoint);
                     return result;
@@ -122,7 +129,7 @@ sealed class WindowsTcpListenerV4 : ITcpListener<IpAddressV4>
                 Sys.Throw(error, $"Failed to listen on socket bound to {bindEndpoint}.");
             }
 
-            return new WindowsTcpListenerV4(fd);
+            return new WindowsTcpListenerV4(fd, socketOptions);
         }
         catch
         {

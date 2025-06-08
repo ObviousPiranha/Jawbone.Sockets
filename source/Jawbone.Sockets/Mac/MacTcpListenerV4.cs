@@ -5,11 +5,18 @@ namespace Jawbone.Sockets.Mac;
 sealed class MacTcpListenerV4 : ITcpListener<IpAddressV4>
 {
     private readonly int _fd;
+    private readonly SocketOptions _socketOptions;
 
     public InterruptHandling HandleInterruptOnAccept { get; set; }
     public bool WasInterrupted { get; private set; }
 
-    private MacTcpListenerV4(int fd) => _fd = fd;
+    private MacTcpListenerV4(
+        int fd,
+        SocketOptions socketOptions)
+    {
+        _fd = fd;
+        _socketOptions = socketOptions;
+    }
 
     public ITcpClient<IpAddressV4>? Accept(int timeoutInMilliseconds)
     {
@@ -40,7 +47,7 @@ sealed class MacTcpListenerV4 : ITcpListener<IpAddressV4>
 
                 try
                 {
-                    Tcp.SetNoDelay(fd);
+                    Tcp.SetNoDelay(fd, !_socketOptions.All(SocketOptions.DisableTcpNoDelay));
                     var endpoint = address.GetV4(addressLength);
                     var result = new MacTcpClientV4(fd, endpoint);
                     return result;
@@ -123,7 +130,7 @@ sealed class MacTcpListenerV4 : ITcpListener<IpAddressV4>
                 Sys.Throw(errNo, $"Failed to listen on socket bound to {bindEndpoint}.");
             }
 
-            return new MacTcpListenerV4(fd);
+            return new MacTcpListenerV4(fd, socketOptions);
         }
         catch
         {

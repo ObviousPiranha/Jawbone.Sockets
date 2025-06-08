@@ -5,12 +5,18 @@ namespace Jawbone.Sockets.Mac;
 sealed class MacTcpListenerV4 : ITcpListener<IpAddressV4>
 {
     private readonly int _fd;
-    private SockAddrStorage _address;
+    private readonly SocketOptions _socketOptions;
 
     public InterruptHandling HandleInterruptOnAccept { get; set; }
     public bool WasInterrupted { get; private set; }
 
-    private MacTcpListenerV4(int fd) => _fd = fd;
+    private MacTcpListenerV4(
+        int fd,
+        SocketOptions socketOptions)
+    {
+        _fd = fd;
+        _socketOptions = socketOptions;
+    }
 
     public ITcpClient<IpAddressV4>? Accept(int timeoutInMilliseconds)
     {
@@ -28,7 +34,7 @@ sealed class MacTcpListenerV4 : ITcpListener<IpAddressV4>
             {
             retryAccept:
                 var addressLength = SockAddrStorage.Len;
-                var fd = Sys.Accept(_fd, out _address, ref addressLength);
+                var fd = Sys.Accept(_fd, out var address, ref addressLength);
                 if (fd == -1)
                 {
                     var errNo = Sys.ErrNo();
@@ -41,8 +47,8 @@ sealed class MacTcpListenerV4 : ITcpListener<IpAddressV4>
 
                 try
                 {
-                    Tcp.SetNoDelay(fd);
-                    var endpoint = _address.GetV4(addressLength);
+                    Tcp.SetNoDelay(fd, !_socketOptions.All(SocketOptions.DisableTcpNoDelay));
+                    var endpoint = address.GetV4(addressLength);
                     var result = new MacTcpClientV4(fd, endpoint);
                     return result;
                 }
@@ -81,10 +87,10 @@ sealed class MacTcpListenerV4 : ITcpListener<IpAddressV4>
     public IpEndpoint<IpAddressV4> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
-        var result = Sys.GetSockName(_fd, out _address, ref addressLength);
+        var result = Sys.GetSockName(_fd, out var address, ref addressLength);
         if (result == -1)
             Sys.Throw(ExceptionMessages.GetSocketName);
-        return _address.GetV4(addressLength);
+        return address.GetV4(addressLength);
     }
 
     public void Dispose()
@@ -94,7 +100,10 @@ sealed class MacTcpListenerV4 : ITcpListener<IpAddressV4>
             Sys.Throw(ExceptionMessages.CloseSocket);
     }
 
-    public static MacTcpListenerV4 Listen(IpEndpoint<IpAddressV4> bindEndpoint, int backlog)
+    public static MacTcpListenerV4 Listen(
+        IpEndpoint<IpAddressV4> bindEndpoint,
+        int backlog,
+        SocketOptions socketOptions)
     {
         int fd = Sys.Socket(Af.INet, Sock.Stream, 0);
 
@@ -103,7 +112,7 @@ sealed class MacTcpListenerV4 : ITcpListener<IpAddressV4>
 
         try
         {
-            So.SetReuseAddr(fd);
+            So.SetReuseAddr(fd, socketOptions.None(SocketOptions.DoNotReuseAddress));
             var sa = SockAddrIn.FromEndpoint(bindEndpoint);
             var bindResult = Sys.BindV4(fd, sa, SockAddrIn.Len);
 
@@ -121,7 +130,7 @@ sealed class MacTcpListenerV4 : ITcpListener<IpAddressV4>
                 Sys.Throw(errNo, $"Failed to listen on socket bound to {bindEndpoint}.");
             }
 
-            return new MacTcpListenerV4(fd);
+            return new MacTcpListenerV4(fd, socketOptions);
         }
         catch
         {

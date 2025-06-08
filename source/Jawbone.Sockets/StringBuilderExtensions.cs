@@ -8,30 +8,44 @@ public static class StringBuilderExtensions
 {
     public static StringBuilder AppendIpAddress(
         this StringBuilder builder,
-        in IpAddress address)
+        in IpAddress ipAddress)
     {
-        return AppendFormattable(builder, address);
+        return AppendFormattable(builder, ipAddress);
     }
 
     public static StringBuilder AppendIpAddress<TAddress>(
         this StringBuilder builder,
-        TAddress address) where TAddress : unmanaged, IIpAddress<TAddress>
+        TAddress ipAddress) where TAddress : unmanaged, IIpAddress<TAddress>
     {
-        return AppendFormattable(builder, address);
+        return AppendFormattable(builder, ipAddress);
+    }
+
+    public static StringBuilder AppendIpEndpoint(
+        this StringBuilder builder,
+        IpEndpoint ipEndpoint)
+    {
+        return AppendFormattable(builder, ipEndpoint);
     }
 
     public static StringBuilder AppendIpEndpoint<TAddress>(
         this StringBuilder builder,
-        IpEndpoint endpoint)
+        IpEndpoint<TAddress> ipEndpoint) where TAddress : unmanaged, IIpAddress<TAddress>
     {
-        return AppendFormattable(builder, endpoint);
+        return AppendFormattable(builder, ipEndpoint);
     }
 
-    public static StringBuilder AppendIpEndpoint<TAddress>(
+    public static StringBuilder AppendIpNetwork(
         this StringBuilder builder,
-        IpEndpoint<TAddress> endpoint) where TAddress : unmanaged, IIpAddress<TAddress>
+        IpNetwork ipNetwork)
     {
-        return AppendFormattable(builder, endpoint);
+        return AppendFormattable(builder, ipNetwork);
+    }
+
+    public static StringBuilder AppendIpNetwork<TAddress>(
+        this StringBuilder builder,
+        IpNetwork<TAddress> ipNetwork) where TAddress : unmanaged, IIpAddress<TAddress>
+    {
+        return AppendFormattable(builder, ipNetwork);
     }
 
     private static StringBuilder AppendFormattable<T>(StringBuilder builder, T item) where T : ISpanFormattable

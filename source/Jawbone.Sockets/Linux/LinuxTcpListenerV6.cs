@@ -5,12 +5,18 @@ namespace Jawbone.Sockets.Linux;
 sealed class LinuxTcpListenerV6 : ITcpListener<IpAddressV6>
 {
     private readonly int _fd;
-    private SockAddrStorage _address;
+    private readonly SocketOptions _socketOptions;
 
     public InterruptHandling HandleInterruptOnAccept { get; set; }
     public bool WasInterrupted { get; private set; }
 
-    private LinuxTcpListenerV6(int fd) => _fd = fd;
+    private LinuxTcpListenerV6(
+        int fd,
+        SocketOptions socketOptions)
+    {
+        _fd = fd;
+        _socketOptions = socketOptions;
+    }
 
     public ITcpClient<IpAddressV6>? Accept(int timeoutInMilliseconds)
     {
@@ -28,7 +34,7 @@ sealed class LinuxTcpListenerV6 : ITcpListener<IpAddressV6>
             {
             retryAccept:
                 var addressLength = SockAddrStorage.Len;
-                var fd = Sys.Accept(_fd, out _address, ref addressLength);
+                var fd = Sys.Accept(_fd, out var address, ref addressLength);
                 if (fd == -1)
                 {
                     var errNo = Sys.ErrNo();
@@ -41,8 +47,8 @@ sealed class LinuxTcpListenerV6 : ITcpListener<IpAddressV6>
 
                 try
                 {
-                    Tcp.SetNoDelay(fd);
-                    var endpoint = _address.GetV6(addressLength);
+                    Tcp.SetNoDelay(fd, !_socketOptions.All(SocketOptions.DisableTcpNoDelay));
+                    var endpoint = address.GetV6(addressLength);
                     var result = new LinuxTcpClientV6(fd, endpoint);
                     return result;
                 }
@@ -93,7 +99,10 @@ sealed class LinuxTcpListenerV6 : ITcpListener<IpAddressV6>
             Sys.Throw(ExceptionMessages.CloseSocket);
     }
 
-    public static LinuxTcpListenerV6 Listen(IpEndpoint<IpAddressV6> bindEndpoint, int backlog, bool allowV4)
+    public static LinuxTcpListenerV6 Listen(
+        IpEndpoint<IpAddressV6> bindEndpoint,
+        int backlog,
+        SocketOptions socketOptions)
     {
         int fd = Sys.Socket(Af.INet6, Sock.Stream, 0);
 
@@ -102,8 +111,8 @@ sealed class LinuxTcpListenerV6 : ITcpListener<IpAddressV6>
 
         try
         {
-            Ipv6.SetIpv6Only(fd, allowV4);
-            So.SetReuseAddr(fd);
+            Ipv6.SetIpv6Only(fd, socketOptions.All(SocketOptions.EnableDualMode));
+            So.SetReuseAddr(fd, socketOptions.None(SocketOptions.DoNotReuseAddress));
             var sa = SockAddrIn6.FromEndpoint(bindEndpoint);
             var bindResult = Sys.BindV6(fd, sa, SockAddrIn6.Len);
 
@@ -121,7 +130,7 @@ sealed class LinuxTcpListenerV6 : ITcpListener<IpAddressV6>
                 Sys.Throw(errNo, $"Failed to listen on socket bound to {bindEndpoint}.");
             }
 
-            return new LinuxTcpListenerV6(fd);
+            return new LinuxTcpListenerV6(fd, socketOptions);
         }
         catch
         {

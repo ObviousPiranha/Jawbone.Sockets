@@ -1,5 +1,3 @@
-using System;
-
 namespace Jawbone.Sockets;
 
 public struct TransferResult

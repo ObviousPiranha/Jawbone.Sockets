@@ -6,7 +6,6 @@ namespace Jawbone.Sockets.Mac;
 sealed class MacUdpClientV4 : IUdpClient<IpAddressV4>
 {
     private readonly int _fd;
-    private SockAddrStorage _address;
 
     public InterruptHandling HandleInterruptOnSend { get; set; }
     public InterruptHandling HandleInterruptOnReceive { get; set; }
@@ -29,10 +28,10 @@ sealed class MacUdpClientV4 : IUdpClient<IpAddressV4>
     public IpEndpoint<IpAddressV4> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
-        var result = Sys.GetSockName(_fd, out _address, ref addressLength);
+        var result = Sys.GetSockName(_fd, out var address, ref addressLength);
         if (result == -1)
             Sys.Throw(ExceptionMessages.GetSocketName);
-        return _address.GetV4(addressLength);
+        return address.GetV4(addressLength);
     }
 
     public TransferResult Receive(Span<byte> buffer, int timeoutInMilliseconds)
@@ -56,7 +55,7 @@ sealed class MacUdpClientV4 : IUdpClient<IpAddressV4>
                     out buffer.GetPinnableReference(),
                     (nuint)buffer.Length,
                     0,
-                    out _address,
+                    out var address,
                     ref addressLength);
 
                 if (receiveResult == -1)
@@ -69,7 +68,7 @@ sealed class MacUdpClientV4 : IUdpClient<IpAddressV4>
                     goto retryReceive;
                 }
 
-                var origin = _address.GetV4(addressLength);
+                var origin = address.GetV4(addressLength);
                 Debug.Assert(origin == Origin);
                 return new((int)receiveResult);
             }
@@ -122,21 +121,23 @@ sealed class MacUdpClientV4 : IUdpClient<IpAddressV4>
         return new((int)result);
     }
 
-    public static MacUdpClientV4 Connect(IpEndpoint<IpAddressV4> endpoint)
+    public static MacUdpClientV4 Connect(
+        IpEndpoint<IpAddressV4> ipEndpoint,
+        SocketOptions socketOptions)
     {
         var fd = CreateSocket();
 
         try
         {
-            var sa = SockAddrIn.FromEndpoint(endpoint);
+            var sa = SockAddrIn.FromEndpoint(ipEndpoint);
             var result = Sys.ConnectV4(fd, sa, SockAddrIn.Len);
             if (result == -1)
             {
                 var errNo = Sys.ErrNo();
-                Sys.Throw(errNo, $"Failed to connect to {endpoint}.");
+                Sys.Throw(errNo, $"Failed to connect to {ipEndpoint}.");
             }
 
-            return new MacUdpClientV4(fd, endpoint);
+            return new MacUdpClientV4(fd, ipEndpoint);
         }
         catch
         {

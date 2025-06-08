@@ -43,5 +43,10 @@ public static class IpAddressExtensions
         return TAddress.CreateNetwork(ipAddress, prefixLength);
     }
 
-    public static IpNetwork WithPrefix(this IpAddress ipAddress, int prefixLength) => IpAddress.CreateNetwork(ipAddress, prefixLength);
+    public static IpNetwork WithPrefix(
+        this IpAddress ipAddress,
+        int prefixLength)
+    {
+        return IpAddress.CreateNetwork(ipAddress, prefixLength);
+    }
 }

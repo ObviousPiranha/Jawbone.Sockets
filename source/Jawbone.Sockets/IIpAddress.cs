@@ -35,6 +35,10 @@ public interface IIpAddress<TAddress> :
     static abstract IpNetwork<TAddress> CreateNetwork(TAddress ipAddress, int prefixLength);
     static abstract bool TryCreateNetwork(TAddress ipAddress, int prefixLength, out IpNetwork<TAddress> ipNetwork);
     static abstract bool IsInNetwork(TAddress ipAddress, IpNetwork<TAddress> ipNetwork);
+    static abstract IUdpSocket<TAddress> BindUdpSocket(IpEndpoint<TAddress> ipEndpoint, SocketOptions socketOptions = default);
+    static abstract IUdpClient<TAddress> ConnectUdpClient(IpEndpoint<TAddress> ipEndpoint, SocketOptions socketOptions = default);
+    static abstract ITcpListener<TAddress> TcpListen(IpEndpoint<TAddress> ipEndpoint, int backlog, SocketOptions socketOptions = default);
+    static abstract ITcpClient<TAddress> ConnectTcpClient(IpEndpoint<TAddress> ipEndpoint, SocketOptions socketOptions = default);
 
     static abstract explicit operator TAddress(IPAddress ipAddress);
     static abstract explicit operator IPAddress(TAddress ipAddress);

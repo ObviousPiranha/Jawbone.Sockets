@@ -5,7 +5,6 @@ namespace Jawbone.Sockets.Linux;
 sealed class LinuxUdpSocketV4 : IUdpSocket<IpAddressV4>
 {
     private readonly int _fd;
-    private SockAddrStorage _address;
 
     public InterruptHandling HandleInterruptOnSend { get; set; }
     public InterruptHandling HandleInterruptOnReceive { get; set; }
@@ -72,7 +71,7 @@ sealed class LinuxUdpSocketV4 : IUdpSocket<IpAddressV4>
                     out buffer.GetPinnableReference(),
                     (nuint)buffer.Length,
                     0,
-                    out _address,
+                    out var address,
                     ref addressLength);
 
                 if (receiveResult == -1)
@@ -88,7 +87,7 @@ sealed class LinuxUdpSocketV4 : IUdpSocket<IpAddressV4>
                     goto retryReceive;
                 }
 
-                origin = _address.GetV4(addressLength);
+                origin = address.GetV4(addressLength);
                 return new((int)receiveResult);
             }
 
@@ -123,10 +122,10 @@ sealed class LinuxUdpSocketV4 : IUdpSocket<IpAddressV4>
     public unsafe IpEndpoint<IpAddressV4> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
-        var result = Sys.GetSockName(_fd, out _address, ref addressLength);
+        var result = Sys.GetSockName(_fd, out var address, ref addressLength);
         if (result == -1)
             Sys.Throw(ExceptionMessages.GetSocketName);
-        return _address.GetV4(addressLength);
+        return address.GetV4(addressLength);
     }
 
     public static LinuxUdpSocketV4 Create()
@@ -135,13 +134,14 @@ sealed class LinuxUdpSocketV4 : IUdpSocket<IpAddressV4>
         return new LinuxUdpSocketV4(fd);
     }
 
-    public static LinuxUdpSocketV4 Bind(IpEndpoint<IpAddressV4> endpoint)
+    public static LinuxUdpSocketV4 Bind(IpEndpoint<IpAddressV4> endpoint, SocketOptions socketOptions)
     {
         var fd = CreateSocket();
 
         try
         {
-            So.SetReuseAddr(fd);
+            So.SetReuseAddr(fd, socketOptions.None(SocketOptions.DoNotReuseAddress));
+            So.SetBroadcast(fd, socketOptions.All(SocketOptions.EnableUdpBroadcast));
             var sa = SockAddrIn.FromEndpoint(endpoint);
             var bindResult = Sys.BindV4(fd, sa, SockAddrIn.Len);
 

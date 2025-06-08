@@ -6,7 +6,10 @@ namespace Jawbone.Sockets;
 
 public static class Dns
 {
-    private static IEnumerable<IpEndpoint> CreateQuery(string? node, string? service, IpAddressVersion filter)
+    private static IEnumerable<IpEndpoint> CreateQuery(
+        string? node,
+        string? service,
+        IpAddressVersion filter)
     {
         if (OperatingSystem.IsWindows())
             return new Windows.WindowsDns.Enumerable(node, service, filter);

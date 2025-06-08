@@ -22,8 +22,6 @@ public interface IIpAddress<TAddress> :
     IIpAddress
     where TAddress : unmanaged, IIpAddress<TAddress>
 {
-    bool IsInNetwork(IpNetwork<TAddress> ipNetwork);
-
     static abstract TAddress Any { get; }
     static abstract TAddress Local { get; }
     static abstract IpAddressVersion Version { get; }
@@ -36,6 +34,7 @@ public interface IIpAddress<TAddress> :
     static abstract bool TryParse(ReadOnlySpan<byte> utf8Text, out TAddress result);
     static abstract IpNetwork<TAddress> CreateNetwork(TAddress ipAddress, int prefixLength);
     static abstract bool TryCreateNetwork(TAddress ipAddress, int prefixLength, out IpNetwork<TAddress> ipNetwork);
+    static abstract bool IsInNetwork(TAddress ipAddress, IpNetwork<TAddress> ipNetwork);
 
     static abstract explicit operator TAddress(IPAddress ipAddress);
     static abstract explicit operator IPAddress(TAddress ipAddress);

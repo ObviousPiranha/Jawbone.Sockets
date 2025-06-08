@@ -94,17 +94,6 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
 
     internal IpAddressV4(uint address) => DataU32 = address;
 
-    public readonly bool IsInNetwork(IpNetwork<IpAddressV4> ipNetwork)
-    {
-        if (ipNetwork.PrefixLength == 0)
-            return true;
-        var mask = uint.MaxValue << (32 - ipNetwork.PrefixLength);
-        if (BitConverter.IsLittleEndian)
-            mask = BinaryPrimitives.ReverseEndianness(mask);
-        var result = (DataU32 & mask) == ipNetwork.BaseAddress.DataU32;
-        return result;
-    }
-
     public readonly bool Equals(IpAddressV4 other) => DataU32 == other.DataU32;
     public override readonly bool Equals([NotNullWhen(true)] object? obj)
         => obj is IpAddressV4 other && Equals(other);
@@ -282,6 +271,17 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
     failure:
         ipNetwork = default;
         return false;
+    }
+
+    public static bool IsInNetwork(IpAddressV4 ipAddress, IpNetwork<IpAddressV4> ipNetwork)
+    {
+        if (ipNetwork.PrefixLength == 0)
+            return true;
+        var mask = uint.MaxValue << (32 - ipNetwork.PrefixLength);
+        if (BitConverter.IsLittleEndian)
+            mask = BinaryPrimitives.ReverseEndianness(mask);
+        var result = (ipAddress.DataU32 & mask) == ipNetwork.BaseAddress.DataU32;
+        return result;
     }
 
     public static IpAddressV4 Create(

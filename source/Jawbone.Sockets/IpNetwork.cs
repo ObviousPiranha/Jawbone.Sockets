@@ -175,7 +175,7 @@ public readonly struct IpNetwork<TAddress> :
     public override readonly int GetHashCode() => HashCode.Combine(BaseAddress, PrefixLength);
     public override readonly string ToString() => SpanWriter.GetString(this);
 
-    public readonly bool Contains(TAddress address) => address.IsInNetwork(this);
+    public readonly bool Contains(TAddress ipAddress) => TAddress.IsInNetwork(ipAddress, this);
 
     public readonly bool TryFormat(
         Span<byte> utf8Destination,

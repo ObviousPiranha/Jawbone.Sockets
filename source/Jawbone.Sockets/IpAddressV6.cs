@@ -144,12 +144,12 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         ScopeId = scopeId;
     }
 
-    private IpAddressV6(uint a, uint b, uint c, uint d, uint scopeId = 0)
+    private IpAddressV6(uint v0, uint v1, uint v2, uint v3, uint scopeId = 0)
     {
-        DataU32[0] = a;
-        DataU32[1] = b;
-        DataU32[2] = c;
-        DataU32[3] = d;
+        DataU32[0] = v0;
+        DataU32[1] = v1;
+        DataU32[2] = v2;
+        DataU32[3] = v3;
         ScopeId = scopeId;
     }
 
@@ -160,18 +160,6 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
     }
 
     private readonly UInt128 GetU128() => BitConverter.ToUInt128(DataU8);
-
-    public readonly bool IsInNetwork(IpNetwork<IpAddressV6> ipNetwork)
-    {
-        if (ipNetwork.PrefixLength == 0)
-            return true;
-        var address = GetU128();
-        var baseAddress = ipNetwork.BaseAddress.GetU128();
-        var mask = UInt128.MaxValue << (MaxPrefixLength - ipNetwork.PrefixLength);
-        if (BitConverter.IsLittleEndian)
-            mask = BinaryPrimitives.ReverseEndianness(mask);
-        return (address & mask) == baseAddress;
-    }
 
     public readonly bool TryMapV4(out IpAddressV4 address)
     {
@@ -835,6 +823,18 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
     failure:
         ipNetwork = default;
         return false;
+    }
+
+    public static bool IsInNetwork(IpAddressV6 ipAddress, IpNetwork<IpAddressV6> ipNetwork)
+    {
+        if (ipNetwork.PrefixLength == 0)
+            return true;
+        var address = ipAddress.GetU128();
+        var baseAddress = ipNetwork.BaseAddress.GetU128();
+        var mask = UInt128.MaxValue << (MaxPrefixLength - ipNetwork.PrefixLength);
+        if (BitConverter.IsLittleEndian)
+            mask = BinaryPrimitives.ReverseEndianness(mask);
+        return (address & mask) == baseAddress;
     }
 
     public static IpAddressV6 Create(

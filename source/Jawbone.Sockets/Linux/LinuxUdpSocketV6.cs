@@ -141,6 +141,7 @@ sealed class LinuxUdpSocketV6 : IUdpSocket<IpAddressV6>
         try
         {
             So.SetReuseAddr(fd, !socketOptions.All(SocketOptions.DoNotReuseAddress));
+            So.SetBroadcast(fd, socketOptions.All(SocketOptions.EnableUdpBroadcast));
             var sa = SockAddrIn6.FromEndpoint(endpoint);
             var bindResult = Sys.BindV6(fd, sa, SockAddrIn6.Len);
 

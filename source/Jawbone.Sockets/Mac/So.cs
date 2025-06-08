@@ -16,6 +16,6 @@ public static class So
             Sys.SockLen<int>());
 
         if (result == -1)
-            Sys.Throw("Unable to enable SO_REUSEADDR.");
+            Sys.Throw(ExceptionMessages.ReuseAddress);
     }
 }

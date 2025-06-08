@@ -141,6 +141,7 @@ sealed class LinuxUdpSocketV4 : IUdpSocket<IpAddressV4>
         try
         {
             So.SetReuseAddr(fd, !socketOptions.All(SocketOptions.DoNotReuseAddress));
+            So.SetBroadcast(fd, socketOptions.All(SocketOptions.EnableUdpBroadcast));
             var sa = SockAddrIn.FromEndpoint(endpoint);
             var bindResult = Sys.BindV4(fd, sa, SockAddrIn.Len);
 

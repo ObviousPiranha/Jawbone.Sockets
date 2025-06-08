@@ -89,18 +89,18 @@ Now you're ready to make a socket! All socket types are generic as they are _con
 
 ```csharp
 // Create a socket and listen on port 10215. Ideal for servers.
-using IUdpSocket<IpAddressV4> server = UdpSocketV4.BindAnyIp(10215);
+using IUdpSocket<IpAddressV4> server = UdpSocket.BindAnyIpV4(10215);
 
 // Connect a client.
 IpEndpoint<IpAddressV4> origin = new IpAddressV4(10, 0, 0, 23).OnPort(10215);
-using IUdpClient<IpAddressV4> client = UdpClientV4.Connect(origin);
+using IUdpClient<IpAddressV4> client = UdpClient.Connect(origin);
 
 // Create an IPv6 server and (optionally) allow interop with IPv4!
-using IUdpSocket<IpAddressV6> serverV6 = UdpSocketV6.BindAnyIp(38555, allowV4: true);
+using IUdpSocket<IpAddressV6> serverV6 = UdpSocket.BindAnyIpV6(38555, allowV4: true);
 
 // Connect an IPv6 client.
 IpEndpoint<IpAddressV6> originV6 = myIpAddressV6.OnPort(38555);
-using IUdpClient<IpAddressV6> clientV6 = UdpClientV6.Connect(originV6);
+using IUdpClient<IpAddressV6> clientV6 = UdpClient.Connect(originV6);
 ```
 
 Sending data is very simple. The `Send` method accepts any `ReadOnlySpan<byte>`.
@@ -140,13 +140,13 @@ Create a TCP listener to get started.
 
 ```csharp
 var bindEndpoint = IpAddressV4.Local.OnPort(5555);
-using ITcpListener<IpAddressV4> listener = TcpListenerV4.Listen(bindEndpoint, 4); // Backlog of 4 pending connections.
+using ITcpListener<IpAddressV4> listener = TcpListener.Listen(bindEndpoint, 4); // Backlog of 4 pending connections.
 ```
 
 Connect with a client.
 
 ```csharp
-using ITcpClient<IpAddressV4> client = TcpClientV4.Connect(serverEndpoint);
+using ITcpClient<IpAddressV4> client = TcpClient.Connect(serverEndpoint);
 ```
 
 Accept the connection into another `ITcpClient<T>` on the server side.

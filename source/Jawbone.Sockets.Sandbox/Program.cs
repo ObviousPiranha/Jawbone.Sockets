@@ -1,6 +1,30 @@
 ﻿// See https://aka.ms/new-console-template for more information
 using Jawbone.Sockets;
 using System;
+using System.IO;
+using System.Text;
+
+{
+    var buffer = new byte[4096];
+    var headers = File.ReadAllBytes("headers.txt");
+    using var socket = UdpSocket.BindAnyIpV4();
+    var ipEndpoint = new IpAddressV4(239, 255, 255, 250).OnPort(1900);
+    socket.Send(headers, ipEndpoint);
+    while (true)
+    {
+        var result = socket.Receive(buffer, 2000, out var origin);
+        if (result.Result == SocketResult.Timeout)
+            break;
+        Console.WriteLine($"Received {result.Count} bytes from {origin}.");
+        Console.WriteLine();
+        var text = Encoding.ASCII.GetString(buffer.AsSpan(0, result.Count));
+        Console.WriteLine(text);
+        Console.WriteLine();
+    }
+    Console.WriteLine("timeout");
+}
+
+Environment.Exit(0);
 
 {
     var v4 = IpNetwork<IpAddressV4>.Parse("127.0.0.1/32");
@@ -97,7 +121,7 @@ using System;
 static void Test<T>(IpNetwork<T> network, T address)
     where T : unmanaged, IIpAddress<T>
 {
-    var result = address.IsInNetwork(network);
+    var result = T.IsInNetwork(address, network);
     Console.WriteLine($"Network {network} - Test {address} - {result}");
 }
 

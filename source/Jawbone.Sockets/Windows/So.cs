@@ -17,6 +17,6 @@ public static class So
             Unsafe.SizeOf<uint>());
 
         if (result == -1)
-            Sys.Throw("Unable to enable SO_REUSEADDR.");
+            Sys.Throw(ExceptionMessages.ReuseAddress);
     }
 }

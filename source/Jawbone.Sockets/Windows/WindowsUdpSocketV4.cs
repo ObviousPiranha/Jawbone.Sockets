@@ -135,13 +135,13 @@ sealed class WindowsUdpSocketV4 : IUdpSocket<IpAddressV4>
         return new WindowsUdpSocketV4(socket);
     }
 
-    public static WindowsUdpSocketV4 Bind(IpEndpoint<IpAddressV4> endpoint)
+    public static WindowsUdpSocketV4 Bind(IpEndpoint<IpAddressV4> endpoint, SocketOptions socketOptions)
     {
         var socket = CreateSocket();
 
         try
         {
-            So.SetReuseAddr(socket);
+            So.SetReuseAddr(socket, !socketOptions.All(SocketOptions.DoNotReuseAddress));
             var sa = SockAddrIn.FromEndpoint(endpoint);
             var bindResult = Sys.BindV4(socket, sa, SockAddrIn.Len);
 

@@ -1022,6 +1022,35 @@ public struct IpAddressV6 : IIpAddress<IpAddressV6>
         return result;
     }
 
+    public static IUdpSocket<IpAddressV6> BindUdpSocket(
+        IpEndpoint<IpAddressV6> endpoint,
+        SocketOptions socketOptions = default)
+    {
+        if (OperatingSystem.IsWindows())
+            return Windows.WindowsUdpSocketV6.Bind(endpoint, socketOptions);
+        else if (OperatingSystem.IsMacOS())
+            return Mac.MacUdpSocketV6.Bind(endpoint, socketOptions);
+        else if (OperatingSystem.IsLinux())
+            return Linux.LinuxUdpSocketV6.Bind(endpoint, socketOptions);
+        else
+            throw new PlatformNotSupportedException();
+    }
+
+    public static ITcpListener<IpAddressV6> TcpListen(
+        IpEndpoint<IpAddressV6> bindEndpoint,
+        int backlog,
+        SocketOptions socketOptions = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(backlog);
+        if (OperatingSystem.IsWindows())
+            return Windows.WindowsTcpListenerV6.Listen(bindEndpoint, backlog, socketOptions);
+        if (OperatingSystem.IsMacOS())
+            return Mac.MacTcpListenerV6.Listen(bindEndpoint, backlog, socketOptions);
+        if (OperatingSystem.IsLinux())
+            return Linux.LinuxTcpListenerV6.Listen(bindEndpoint, backlog, socketOptions);
+        throw new PlatformNotSupportedException();
+    }
+
     public static explicit operator IpAddressV6(IPAddress ipAddress)
     {
         ArgumentNullException.ThrowIfNull(ipAddress);

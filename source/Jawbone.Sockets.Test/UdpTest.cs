@@ -21,7 +21,7 @@ public class UdpTest
         // Ensure that the amount received doesn't match by luck.
         var receiveBuffer = new byte[sendBuffer.Length * 2];
 
-        using var socketA = UdpSocketV4.BindLocalIp();
+        using var socketA = UdpSocket.BindLocalIpV4();
         var endpointA = socketA.GetSocketName();
         using var socketB = UdpClientV4.Connect(endpointA);
         socketB.Send(sendBuffer);
@@ -50,7 +50,7 @@ public class UdpTest
         // Ensure that the amount received doesn't match by luck.
         var receiveBuffer = new byte[sendBuffer.Length * 2];
 
-        using var socketA = UdpSocketV6.BindLocalIp();
+        using var socketA = UdpSocket.BindLocalIpV6();
         var endpointA = socketA.GetSocketName();
         using var socketB = UdpClientV6.Connect(endpointA);
         socketB.Send(sendBuffer);
@@ -81,7 +81,7 @@ public class UdpTest
         var receiveBuffer = new byte[sendBuffer.Length * 2];
 
 
-        using var socketB = UdpSocketV6.Bind(v4LocalAsV6.OnAnyPort(), true);
+        using var socketB = UdpSocket.Bind(v4LocalAsV6.OnAnyPort(), SocketOptions.EnableDualMode);
         var endpointB = socketB.GetSocketName();
         var destinationB = IpAddressV4.Local.OnPort(endpointB.Port);
 
@@ -117,7 +117,7 @@ public class UdpTest
         // Ensure that the amount received doesn't match by luck.
         var receiveBuffer = new byte[sendBuffer.Length * 2];
 
-        using var socketB = UdpSocketV6.BindLocalIp();
+        using var socketB = UdpSocket.BindLocalIpV6();
         var endpointB = socketB.GetSocketName();
         var destinationB = IpAddressV4.Local.OnPort(endpointB.Port);
 
@@ -128,33 +128,33 @@ public class UdpTest
     }
 
     [Fact]
-    public void CannotBindSamePortV4()
+    public void AddressReuseDisabled_CannotBindSamePortV4()
     {
-        Assert.Skip("Debating whether to reuse addr by default.");
-        using var socketA = UdpSocketV4.BindLocalIp();
+        // Assert.Skip("Debating whether to reuse addr by default.");
+        using var socketA = UdpSocket.BindLocalIpV4(SocketOptions.DoNotReuseAddress);
         var endpointA = socketA.GetSocketName();
 
         Assert.NotEqual(0, endpointA.Port.HostValue);
 
         Assert.Throws<SocketException>(() =>
         {
-            using var socketB = UdpSocketV4.BindLocalIp(endpointA.Port);
+            using var socketB = UdpSocket.BindLocalIpV4(endpointA.Port, SocketOptions.DoNotReuseAddress);
             _ = socketB.GetSocketName();
         });
     }
 
     [Fact]
-    public void CannotBindSamePortV6()
+    public void AddressReuseDisabled_CannotBindSamePortV6()
     {
-        Assert.Skip("Debating whether to reuse addr by default.");
-        using var socketA = UdpSocketV6.BindLocalIp();
+        // Assert.Skip("Debating whether to reuse addr by default.");
+        using var socketA = UdpSocket.BindLocalIpV6(SocketOptions.DoNotReuseAddress);
         var endpoint = socketA.GetSocketName();
 
         Assert.NotEqual(0, endpoint.Port.HostValue);
 
         Assert.Throws<SocketException>(() =>
         {
-            using var socketB = UdpSocketV6.BindLocalIp(endpoint.Port);
+            using var socketB = UdpSocket.BindLocalIpV6(endpoint.Port, SocketOptions.DoNotReuseAddress);
             _ = socketB.GetSocketName();
         });
     }
@@ -167,9 +167,9 @@ public class UdpTest
         {
             try
             {
-                using var v4 = UdpSocketV4.BindLocalIp();
+                using var v4 = UdpSocket.BindLocalIpV4();
                 var endpointV4 = v4.GetSocketName();
-                using var v6 = UdpSocketV6.BindLocalIp(endpointV4.Port);
+                using var v6 = UdpSocket.BindLocalIpV6(endpointV4.Port);
                 var endpointV6 = v6.GetSocketName();
                 Assert.Equal(endpointV4.Port, endpointV6.Port);
                 _output.WriteLine($"Bound on port {endpointV4.Port}.");
@@ -185,19 +185,19 @@ public class UdpTest
     }
 
     [Fact]
-    public void CannotBindSamePortOnV4AndV6InDualMode()
+    public void AddressReuseDisabled_CannotBindSamePortOnV4AndV6InDualMode()
     {
-        Assert.Skip("Debating whether to reuse addr by default.");
+        // Assert.Skip("Debating whether to reuse addr by default.");
         var target = ((IpAddressV6)IpAddressV4.Local).OnAnyPort();
         for (int i = 0; i < 3; ++i)
         {
-            using var v6 = UdpSocketV6.Bind(target, allowV4: true);
+            using var v6 = UdpSocket.Bind(target, SocketOptions.EnableDualMode | SocketOptions.DoNotReuseAddress);
             var endpointV6 = v6.GetSocketName();
 
             Assert.Throws<SocketException>(
                 () =>
                 {
-                    using var v4 = UdpSocketV4.BindLocalIp(endpointV6.Port);
+                    using var v4 = UdpSocket.BindLocalIpV4(endpointV6.Port, SocketOptions.DoNotReuseAddress);
                 });
         }
     }
@@ -205,7 +205,7 @@ public class UdpTest
     [Fact]
     public void UdpClientSendToUdpSocketV4()
     {
-        using var server = UdpSocketV4.BindLocalIp();
+        using var server = UdpSocket.BindLocalIpV4();
         var serverEndpoint = server.GetSocketName();
 
         var message = "greetings"u8;
@@ -232,7 +232,7 @@ public class UdpTest
     [Fact]
     public void UdpClientSendToUdpSocketV6()
     {
-        using var server = UdpSocketV6.BindLocalIp();
+        using var server = UdpSocket.BindLocalIpV6();
         var serverEndpoint = server.GetSocketName();
 
         var message = "greetings"u8;

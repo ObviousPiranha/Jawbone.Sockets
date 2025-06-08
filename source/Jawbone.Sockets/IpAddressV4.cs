@@ -304,6 +304,35 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
 
     public static IpAddressV4 FromNetworkU32(uint networkValue) => new(networkValue);
 
+    public static IUdpSocket<IpAddressV4> BindUdpSocket(
+        IpEndpoint<IpAddressV4> ipEndpoint,
+        SocketOptions socketOptions = default)
+    {
+        if (OperatingSystem.IsWindows())
+            return Windows.WindowsUdpSocketV4.Bind(ipEndpoint, socketOptions);
+        else if (OperatingSystem.IsMacOS())
+            return Mac.MacUdpSocketV4.Bind(ipEndpoint, socketOptions);
+        else if (OperatingSystem.IsLinux())
+            return Linux.LinuxUdpSocketV4.Bind(ipEndpoint, socketOptions);
+        else
+            throw new PlatformNotSupportedException();
+    }
+
+    public static ITcpListener<IpAddressV4> TcpListen(
+        IpEndpoint<IpAddressV4> bindEndpoint,
+        int backlog,
+        SocketOptions socketOptions = default)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(backlog);
+        if (OperatingSystem.IsWindows())
+            return Windows.WindowsTcpListenerV4.Listen(bindEndpoint, backlog, socketOptions);
+        if (OperatingSystem.IsMacOS())
+            return Mac.MacTcpListenerV4.Listen(bindEndpoint, backlog, socketOptions);
+        if (OperatingSystem.IsLinux())
+            return Linux.LinuxTcpListenerV4.Listen(bindEndpoint, backlog, socketOptions);
+        throw new PlatformNotSupportedException();
+    }
+
     public static explicit operator IpAddressV4(IPAddress ipAddress)
     {
         ArgumentNullException.ThrowIfNull(ipAddress);

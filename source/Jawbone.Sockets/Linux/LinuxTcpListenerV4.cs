@@ -93,7 +93,10 @@ sealed class LinuxTcpListenerV4 : ITcpListener<IpAddressV4>
             Sys.Throw(ExceptionMessages.CloseSocket);
     }
 
-    public static LinuxTcpListenerV4 Listen(IpEndpoint<IpAddressV4> bindEndpoint, int backlog)
+    public static LinuxTcpListenerV4 Listen(
+        IpEndpoint<IpAddressV4> bindEndpoint,
+        int backlog,
+        SocketOptions socketOptions)
     {
         int fd = Sys.Socket(Af.INet, Sock.Stream, 0);
 
@@ -102,7 +105,7 @@ sealed class LinuxTcpListenerV4 : ITcpListener<IpAddressV4>
 
         try
         {
-            So.SetReuseAddr(fd);
+            So.SetReuseAddr(fd, !socketOptions.All(SocketOptions.DoNotReuseAddress));
             var sa = SockAddrIn.FromEndpoint(bindEndpoint);
             var bindResult = Sys.BindV4(fd, sa, SockAddrIn.Len);
 

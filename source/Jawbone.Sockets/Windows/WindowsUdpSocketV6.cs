@@ -6,7 +6,6 @@ namespace Jawbone.Sockets.Windows;
 sealed class WindowsUdpSocketV6 : IUdpSocket<IpAddressV6>
 {
     private readonly nuint _fd;
-    private SockAddrStorage _address;
 
     public InterruptHandling HandleInterruptOnSend { get; set; }
     public InterruptHandling HandleInterruptOnReceive { get; set; }
@@ -73,7 +72,7 @@ sealed class WindowsUdpSocketV6 : IUdpSocket<IpAddressV6>
                     out buffer.GetPinnableReference(),
                     buffer.Length,
                     0,
-                    out _address,
+                    out var address,
                     ref addressLength);
 
                 if (receiveResult == -1)
@@ -89,7 +88,7 @@ sealed class WindowsUdpSocketV6 : IUdpSocket<IpAddressV6>
                     goto retryReceive;
                 }
 
-                origin = _address.GetV6(addressLength);
+                origin = address.GetV6(addressLength);
                 return new((int)receiveResult);
             }
 
@@ -124,10 +123,10 @@ sealed class WindowsUdpSocketV6 : IUdpSocket<IpAddressV6>
     public unsafe IpEndpoint<IpAddressV6> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
-        var result = Sys.GetSockName(_fd, out _address, ref addressLength);
+        var result = Sys.GetSockName(_fd, out var address, ref addressLength);
         if (result == -1)
             Sys.Throw(ExceptionMessages.GetSocketName);
-        return _address.GetV6(addressLength);
+        return address.GetV6(addressLength);
     }
 
     public static WindowsUdpSocketV6 Create(bool allowV4)
@@ -136,13 +135,13 @@ sealed class WindowsUdpSocketV6 : IUdpSocket<IpAddressV6>
         return new WindowsUdpSocketV6(socket);
     }
 
-    public static WindowsUdpSocketV6 Bind(IpEndpoint<IpAddressV6> endpoint, bool allowV4)
+    public static WindowsUdpSocketV6 Bind(IpEndpoint<IpAddressV6> endpoint, SocketOptions socketOptions)
     {
-        var socket = CreateSocket(allowV4);
+        var socket = CreateSocket(socketOptions.All(SocketOptions.EnableDualMode));
 
         try
         {
-            So.SetReuseAddr(socket);
+            So.SetReuseAddr(socket, !socketOptions.All(SocketOptions.DoNotReuseAddress));
             var sa = SockAddrIn6.FromEndpoint(endpoint);
             var bindResult = Sys.BindV6(socket, sa, SockAddrIn6.Len);
 

@@ -5,7 +5,6 @@ namespace Jawbone.Sockets.Mac;
 sealed class MacTcpListenerV6 : ITcpListener<IpAddressV6>
 {
     private readonly int _fd;
-    private SockAddrStorage _address;
 
     public InterruptHandling HandleInterruptOnAccept { get; set; }
     public bool WasInterrupted { get; private set; }
@@ -28,7 +27,7 @@ sealed class MacTcpListenerV6 : ITcpListener<IpAddressV6>
             {
             retryAccept:
                 var addressLength = SockAddrStorage.Len;
-                var fd = Sys.Accept(_fd, out _address, ref addressLength);
+                var fd = Sys.Accept(_fd, out var address, ref addressLength);
                 if (fd == -1)
                 {
                     var errNo = Sys.ErrNo();
@@ -42,7 +41,7 @@ sealed class MacTcpListenerV6 : ITcpListener<IpAddressV6>
                 try
                 {
                     Tcp.SetNoDelay(fd);
-                    var endpoint = _address.GetV6(addressLength);
+                    var endpoint = address.GetV6(addressLength);
                     var result = new MacTcpClientV6(fd, endpoint);
                     return result;
                 }
@@ -80,10 +79,10 @@ sealed class MacTcpListenerV6 : ITcpListener<IpAddressV6>
     public IpEndpoint<IpAddressV6> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
-        var result = Sys.GetSockName(_fd, out _address, ref addressLength);
+        var result = Sys.GetSockName(_fd, out var address, ref addressLength);
         if (result == -1)
             Sys.Throw(ExceptionMessages.GetSocketName);
-        return _address.GetV6(addressLength);
+        return address.GetV6(addressLength);
     }
 
     public void Dispose()
@@ -93,7 +92,10 @@ sealed class MacTcpListenerV6 : ITcpListener<IpAddressV6>
             Sys.Throw(ExceptionMessages.CloseSocket);
     }
 
-    public static MacTcpListenerV6 Listen(IpEndpoint<IpAddressV6> bindEndpoint, int backlog, bool allowV4)
+    public static MacTcpListenerV6 Listen(
+        IpEndpoint<IpAddressV6> bindEndpoint,
+        int backlog,
+        SocketOptions socketOptions)
     {
         int fd = Sys.Socket(Af.INet6, Sock.Stream, 0);
 
@@ -102,8 +104,8 @@ sealed class MacTcpListenerV6 : ITcpListener<IpAddressV6>
 
         try
         {
-            So.SetReuseAddr(fd);
-            Ipv6.SetIpv6Only(fd, allowV4);
+            So.SetReuseAddr(fd, !socketOptions.All(SocketOptions.DoNotReuseAddress));
+            Ipv6.SetIpv6Only(fd, socketOptions.All(SocketOptions.EnableDualMode));
             var sa = SockAddrIn6.FromEndpoint(bindEndpoint);
             var bindResult = Sys.BindV6(fd, sa, SockAddrIn6.Len);
 

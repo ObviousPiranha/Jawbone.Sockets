@@ -135,13 +135,13 @@ sealed class LinuxUdpSocketV4 : IUdpSocket<IpAddressV4>
         return new LinuxUdpSocketV4(fd);
     }
 
-    public static LinuxUdpSocketV4 Bind(IpEndpoint<IpAddressV4> endpoint)
+    public static LinuxUdpSocketV4 Bind(IpEndpoint<IpAddressV4> endpoint, SocketOptions socketOptions)
     {
         var fd = CreateSocket();
 
         try
         {
-            So.SetReuseAddr(fd);
+            So.SetReuseAddr(fd, !socketOptions.All(SocketOptions.DoNotReuseAddress));
             var sa = SockAddrIn.FromEndpoint(endpoint);
             var bindResult = Sys.BindV4(fd, sa, SockAddrIn.Len);
 

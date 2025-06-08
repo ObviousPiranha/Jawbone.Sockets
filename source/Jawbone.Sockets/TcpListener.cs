@@ -1,5 +1,3 @@
-using System;
-
 namespace Jawbone.Sockets;
 
 public static class TcpListener
@@ -15,7 +13,7 @@ public static class TcpListener
         int backlog,
         SocketOptions socketOptions = default)
     {
-        return Listen(IpAddressV4.Any.OnAnyPort(), backlog);
+        return Listen(IpAddressV4.Any.OnAnyPort(), backlog, socketOptions);
     }
 
     public static ITcpListener<IpAddressV6> ListenLocalIpV6(

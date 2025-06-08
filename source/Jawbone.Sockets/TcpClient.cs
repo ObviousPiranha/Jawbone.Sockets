@@ -1,5 +1,3 @@
-using System;
-
 namespace Jawbone.Sockets;
 
 public static class TcpClient

@@ -2,7 +2,6 @@ using System;
 
 namespace Jawbone.Sockets;
 
-[Serializable]
 public class SocketException : Exception
 {
     public ErrorCode Code { get; init; }

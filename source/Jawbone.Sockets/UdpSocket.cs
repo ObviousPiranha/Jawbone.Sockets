@@ -28,7 +28,7 @@ public static class UdpSocket
         int port,
         SocketOptions socketOptions = default)
     {
-        return Bind(IpAddressV4.Local.OnPort(port));
+        return Bind(IpAddressV4.Local.OnPort(port), socketOptions);
     }
 
     public static IUdpSocket<IpAddressV4> BindLocalIpV4(
@@ -38,7 +38,8 @@ public static class UdpSocket
         return Bind(IpAddressV4.Local.OnPort(port), socketOptions);
     }
 
-    public static IUdpSocket<IpAddressV4> BindLocalIpV4(SocketOptions socketOptions = default)
+    public static IUdpSocket<IpAddressV4> BindLocalIpV4(
+        SocketOptions socketOptions = default)
     {
         return Bind(IpAddressV4.Local.OnAnyPort(), socketOptions);
     }
@@ -83,7 +84,9 @@ public static class UdpSocket
         return Bind(IpAddressV6.Local.OnAnyPort(), socketOptions);
     }
     
-    public static IUdpSocket<TAddress> Bind<TAddress>(IpEndpoint<TAddress> ipEndpoint, SocketOptions socketOptions = default)
+    public static IUdpSocket<TAddress> Bind<TAddress>(
+        IpEndpoint<TAddress> ipEndpoint,
+        SocketOptions socketOptions = default)
         where TAddress : unmanaged, IIpAddress<TAddress>
     {
         return TAddress.BindUdpSocket(ipEndpoint, socketOptions);

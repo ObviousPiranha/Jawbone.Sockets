@@ -148,7 +148,7 @@ public class IpEndpointV4Test
             Assert.Equal(expectedUtf16, actualUtf16);
         }
     }
-    
+
     public static TheoryData<IpEndpoint<IpAddressV4>, string> Endpoints => new()
     {
         { IpAddressV4.Any.OnPort(0), "0.0.0.0:0" },

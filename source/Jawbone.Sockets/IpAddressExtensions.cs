@@ -7,7 +7,7 @@ public static class IpAddressExtensions
         ipAddress.ScopeId = scopeId;
         return ipAddress;
     }
-    
+
     public static IpEndpoint<TAddress> OnAnyPort<TAddress>(
         this TAddress address
         ) where TAddress : unmanaged, IIpAddress<TAddress>

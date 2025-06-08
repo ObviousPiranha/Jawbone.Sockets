@@ -212,7 +212,7 @@ public class IpAddressV6Test
         Assert.True(result.IsDefault);
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf8));
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf8, null));
-        
+
         if (result2.Version == IpAddressVersion.None)
             Assert.Throws<FormatException>(() => IpAddress.Parse(utf8));
     }

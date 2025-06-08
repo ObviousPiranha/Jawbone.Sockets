@@ -3,6 +3,28 @@ using Jawbone.Sockets;
 using System;
 
 {
+    var v4 = IpNetwork<IpAddressV4>.Parse("127.0.0.1/32");
+    DumpRange(v4);
+    var v6 = IpNetwork<IpAddressV6>.Parse("ffff::/120");
+    DumpRange(v6);
+}
+
+{
+    var v4 = IpNetwork<IpAddressV4>.Parse("198.51.100.0/22");
+    DumpRange(v4);
+    var v6 = IpNetwork<IpAddressV6>.Parse("2001:db8::/48");
+    DumpRange(v6);
+}
+
+{
+    IpNetwork v4 = IpAddressV4.LinkLocalNetwork;
+    Console.WriteLine(v4);
+    IpNetwork v6 = IpAddressV6.LinkLocalNetwork;
+    Console.WriteLine(v6);
+    Environment.Exit(0);
+}
+
+{
     var e4 = IpAddressV4.Local.OnPort(5555);
     var e6 = IpAddressV6.Local.OnPort(5555);
     Console.WriteLine(e4);
@@ -77,4 +99,10 @@ static void Test<T>(IpNetwork<T> network, T address)
 {
     var result = address.IsInNetwork(network);
     Console.WriteLine($"Network {network} - Test {address} - {result}");
+}
+
+static void DumpRange<T>(IpNetwork<T> ipNetwork) where T : unmanaged, IIpAddress<T>
+{
+    Console.WriteLine(
+        $"{ipNetwork} to {T.GetMaxAddress(ipNetwork)}");
 }

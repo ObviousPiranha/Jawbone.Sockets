@@ -45,8 +45,26 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
     public static IpAddressV4 Local { get; } = new(127, 0, 0, 1);
     public static IpAddressV4 Broadcast { get; } = new(255, 255, 255, 255);
     public static IpAddressVersion Version => IpAddressVersion.V4;
+    public static int MaxPrefixLength => 32;
     // https://en.wikipedia.org/wiki/IPv4#Link-local_addressing
     public static IpNetwork<IpAddressV4> LinkLocalNetwork => new(new IpAddressV4(169, 254, 0, 0), 16);
+
+    public static IpAddressV4 GetMaxAddress(IpNetwork<IpAddressV4> ipNetwork)
+    {
+        if (ipNetwork.PrefixLength < 1)
+        {
+            var result = new IpAddressV4(uint.MaxValue);
+            return result;
+        }
+        else
+        {
+            var mask = ~(uint.MaxValue << (MaxPrefixLength - ipNetwork.PrefixLength));
+            if (BitConverter.IsLittleEndian)
+                mask = BinaryPrimitives.ReverseEndianness(mask);
+            var result = ipNetwork.BaseAddress | new IpAddressV4(mask);
+            return result;
+        }
+    }
 
     [FieldOffset(0)]
     public ArrayU8 DataU8;
@@ -66,26 +84,15 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
         DataU32 = BitConverter.ToUInt32(values);
     }
 
-    public IpAddressV4(byte a, byte b, byte c, byte d)
+    public IpAddressV4(byte b0, byte b1, byte b2, byte b3)
     {
-        DataU8[0] = a;
-        DataU8[1] = b;
-        DataU8[2] = c;
-        DataU8[3] = d;
+        DataU8[0] = b0;
+        DataU8[1] = b1;
+        DataU8[2] = b2;
+        DataU8[3] = b3;
     }
 
-    public IpAddressV4(uint address) => DataU32 = address;
-
-    public readonly bool IsInNetwork(IpNetwork<IpAddressV4> ipNetwork)
-    {
-        if (ipNetwork.PrefixLength == 0)
-            return true;
-        var mask = uint.MaxValue << (32 - ipNetwork.PrefixLength);
-        if (BitConverter.IsLittleEndian)
-            mask = BinaryPrimitives.ReverseEndianness(mask);
-        var result = (DataU32 & mask) == ipNetwork.BaseAddress.DataU32;
-        return result;
-    }
+    internal IpAddressV4(uint address) => DataU32 = address;
 
     public readonly bool Equals(IpAddressV4 other) => DataU32 == other.DataU32;
     public override readonly bool Equals([NotNullWhen(true)] object? obj)
@@ -235,17 +242,67 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
 
     public static bool TryParse(ReadOnlySpan<byte> utf8Text, out IpAddressV4 result) => TryParse(utf8Text, null, out result);
 
-    public static IpNetwork<IpAddressV4> CreateNetwork(IpAddressV4 address, int prefixLength)
+    public static IpNetwork<IpAddressV4> CreateNetwork(IpAddressV4 ipAddress, int prefixLength)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(prefixLength);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(prefixLength, 32);
         var mask = (uint)((long)uint.MaxValue << (32 - prefixLength));
         if (BitConverter.IsLittleEndian)
             mask = BinaryPrimitives.ReverseEndianness(mask);
-        if ((address.DataU32 & mask) != address.DataU32)
-            ThrowExceptionFor.InvalidNetwork(address, prefixLength);
-        return new(address, prefixLength);
+        if ((ipAddress.DataU32 & mask) != ipAddress.DataU32)
+            ThrowExceptionFor.InvalidNetwork(ipAddress, prefixLength);
+        return new(ipAddress, prefixLength);
     }
+
+    public static bool TryCreateNetwork(
+        IpAddressV4 ipAddress,
+        int prefixLength,
+        out IpNetwork<IpAddressV4> ipNetwork)
+    {
+        if (prefixLength < 0 || 32 < prefixLength)
+            goto failure;
+        var mask = (uint)((long)uint.MaxValue << (32 - prefixLength));
+        if (BitConverter.IsLittleEndian)
+            mask = BinaryPrimitives.ReverseEndianness(mask);
+        if ((ipAddress.DataU32 & mask) != ipAddress.DataU32)
+            goto failure;
+        ipNetwork = new(ipAddress, prefixLength);
+        return true;
+    failure:
+        ipNetwork = default;
+        return false;
+    }
+
+    public static bool IsInNetwork(IpAddressV4 ipAddress, IpNetwork<IpAddressV4> ipNetwork)
+    {
+        if (ipNetwork.PrefixLength == 0)
+            return true;
+        var mask = uint.MaxValue << (32 - ipNetwork.PrefixLength);
+        if (BitConverter.IsLittleEndian)
+            mask = BinaryPrimitives.ReverseEndianness(mask);
+        var result = (ipAddress.DataU32 & mask) == ipNetwork.BaseAddress.DataU32;
+        return result;
+    }
+
+    public static IpAddressV4 Create(
+        byte b0 = 0,
+        byte b1 = 0,
+        byte b2 = 0,
+        byte b3 = 0)
+    {
+        return new(b0, b1, b2, b3);
+    }
+
+    public static IpAddressV4 FromHostU32(uint hostValue)
+    {
+        var networkValue = BitConverter.IsLittleEndian ?
+            BinaryPrimitives.ReverseEndianness(hostValue) :
+            hostValue;
+        var result = new IpAddressV4(networkValue);
+        return result;
+    }
+
+    public static IpAddressV4 FromNetworkU32(uint networkValue) => new(networkValue);
 
     public static explicit operator IpAddressV4(IPAddress ipAddress)
     {
@@ -264,6 +321,26 @@ public struct IpAddressV4 : IIpAddress<IpAddressV4>
         return result;
     }
 
+    public static implicit operator IpAddress(IpAddressV4 ipAddress) => new(ipAddress);
+
+    public static explicit operator IpAddressV4(IpAddress ipAddress)
+    {
+        if (ipAddress.Version != Version)
+            throw new InvalidCastException();
+
+        return ipAddress.AsV4();
+    }
+
+    public static IpAddressV4 operator |(IpAddressV4 a, IpAddressV4 b) => new(a.DataU32 | b.DataU32);
+    public static IpAddressV4 operator &(IpAddressV4 a, IpAddressV4 b) => new(a.DataU32 & b.DataU32);
+    public static IpAddressV4 operator ^(IpAddressV4 a, IpAddressV4 b) => new(a.DataU32 ^ b.DataU32);
+    public static IpAddressV4 operator ~(IpAddressV4 ipAddress) => new(~ipAddress.DataU32);
+
     public static bool operator ==(IpAddressV4 a, IpAddressV4 b) => a.Equals(b);
     public static bool operator !=(IpAddressV4 a, IpAddressV4 b) => !a.Equals(b);
+
+    public static bool operator ==(IpAddressV4 a, IpAddress b) => b.Version == Version && b.AsV4().Equals(a);
+    public static bool operator !=(IpAddressV4 a, IpAddress b) => b.Version != Version || !b.AsV4().Equals(a);
+    public static bool operator ==(IpAddress a, IpAddressV4 b) => a.Version == Version && a.AsV4().Equals(b);
+    public static bool operator !=(IpAddress a, IpAddressV4 b) => a.Version != Version || !a.AsV4().Equals(b);
 }

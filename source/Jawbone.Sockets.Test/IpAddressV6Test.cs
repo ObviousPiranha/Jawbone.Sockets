@@ -12,6 +12,7 @@ public class IpAddressV6Test
     {
         AssertSize<IpAddressV6>(20);
         AssertSize<IpEndpoint<IpAddressV6>>(24);
+        Assert.Equal(IpAddressVersion.V6, IpAddressV6.Version);
         Assert.True(IpAddressV6.Local.IsLoopback);
 
         {
@@ -183,22 +184,37 @@ public class IpAddressV6Test
     {
         Assert.False(IpAddressV6.TryParse(utf16, out var result));
         Assert.False(IpAddressV6.TryParse(utf16, null, out result));
+        Assert.False(IpAddress.TryParse(utf16, out var result2) && result2.Version == IpAddressVersion.V6);
+        Assert.False(IpAddress.TryParse(utf16, null, out result2) && result2.Version == IpAddressVersion.V6);
         Assert.True(result.IsDefault);
         Assert.False(IpAddressV6.TryParse(utf16.AsSpan(), out result));
         Assert.False(IpAddressV6.TryParse(utf16.AsSpan(), null, out result));
+        Assert.False(IpAddress.TryParse(utf16.AsSpan(), out result2) && result2.Version == IpAddressVersion.V6);
+        Assert.False(IpAddress.TryParse(utf16.AsSpan(), null, out result2) && result2.Version == IpAddressVersion.V6);
         Assert.True(result.IsDefault);
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf16));
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf16, null));
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf16.AsSpan()));
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf16.AsSpan(), null));
 
+        if (result2.Version == IpAddressVersion.None)
+        {
+            Assert.Throws<FormatException>(() => IpAddress.Parse(utf16));
+            Assert.Throws<FormatException>(() => IpAddress.Parse(utf16.AsSpan()));
+        }
+
         var utf8 = Encoding.UTF8.GetBytes(utf16);
 
         Assert.False(IpAddressV6.TryParse(utf8, out result));
         Assert.False(IpAddressV6.TryParse(utf8, null, out result));
+        Assert.False(IpAddress.TryParse(utf8, out result2) && result2.Version == IpAddressVersion.V6);
+        Assert.False(IpAddress.TryParse(utf8, null, out result2) && result2.Version == IpAddressVersion.V6);
         Assert.True(result.IsDefault);
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf8));
         Assert.Throws<FormatException>(() => IpAddressV6.Parse(utf8, null));
+
+        if (result2.Version == IpAddressVersion.None)
+            Assert.Throws<FormatException>(() => IpAddress.Parse(utf8));
     }
 
     [Theory]
@@ -223,8 +239,18 @@ public class IpAddressV6Test
     public void CastsToAndFromDotNetIpAddress(IpAddressV6 expected, string _)
     {
         var dotNetIpAddress = (IPAddress)expected;
-        var actual = (IpAddressV6)dotNetIpAddress;
-        Assert.Equal(expected, actual);
+        {
+            var actual = (IpAddressV6)dotNetIpAddress;
+            Assert.Equal(expected, actual);
+        }
+
+        {
+            IpAddress actual = dotNetIpAddress;
+            Assert.True(expected == actual);
+            Assert.False(expected != actual);
+            Assert.True(actual == expected);
+            Assert.False(actual != expected);
+        }
     }
 
     [Theory]
@@ -235,15 +261,30 @@ public class IpAddressV6Test
         Assert.Throws<InvalidCastException>(() => (IpAddressV4)dotNetIpAddress);
     }
 
+    [Theory]
+    [MemberData(nameof(Addresses))]
+    public void IpNetworkOfAddressContainsAddress(IpAddressV6 ipAddress, string _)
+    {
+        var ipNetwork = IpNetwork.Create(ipAddress, IpAddressV6.MaxPrefixLength);
+        Assert.True(ipNetwork.Contains(ipAddress));
+    }
+
+    [Theory]
+    [MemberData(nameof(Addresses))]
+    public void EmptyIpNetworkContainsAddress(IpAddressV6 ipAddress, string _)
+    {
+        Assert.True(default(IpNetwork<IpAddressV6>).Contains(ipAddress));
+    }
+
     public static TheoryData<IpAddressV6, string> Addresses => new()
     {
         { IpAddressV6.Any, "::" },
         { IpAddressV6.Local, "::1" },
         { IpAddressV6.FromHostU16([0x2001, 0xdb8, 0x4006, 0x812], [0x200e]), "2001:db8:4006:812::200e" },
         { IpAddressV6.FromHostU16([0x2001, 0xdb8, 0x4006, 0x812], [0x200e], 35), "2001:db8:4006:812::200e%35" },
-        { IpAddressV6.FromBytes(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15), "1:203:405:607:809:a0b:c0d:e0f" },
-        { IpAddressV6.FromHostU32([0x01234567, 0x89abcdef], scopeId: 1), "123:4567:89ab:cdef::%1" },
-        { IpAddressV6.FromHostU32([0x01234567], [0x89abcdef], 2), "123:4567::89ab:cdef%2" },
+        { new IpAddressV6(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15), "1:203:405:607:809:a0b:c0d:e0f" },
+        { IpAddressV6.FromHostU32(0x01234567, 0x89abcdef, scopeId: 1), "123:4567:89ab:cdef::%1" },
+        { IpAddressV6.FromHostU32(0x01234567, v3: 0x89abcdef, scopeId: 2), "123:4567::89ab:cdef%2" },
         { IpAddressV6.FromHostU16([0xfe80], scopeId: 7), "fe80::%7" },
         { IpAddressV6.FromHostU16([0xfe80], [0xa, 0xe21]), "fe80::a:e21" },
         { IpAddressV6.FromHostU64(0x0123456789abcdef, 0xfedcba9876543210), "123:4567:89ab:cdef:fedc:ba98:7654:3210" },

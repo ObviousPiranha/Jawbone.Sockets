@@ -83,7 +83,7 @@ public static class UdpSocket
     {
         return Bind(IpAddressV6.Local.OnAnyPort(), socketOptions);
     }
-    
+
     public static IUdpSocket<TAddress> Bind<TAddress>(
         IpEndpoint<TAddress> ipEndpoint,
         SocketOptions socketOptions = default)

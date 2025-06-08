@@ -29,7 +29,7 @@ public static class TcpListener
     {
         return Listen(IpAddressV6.Any.OnAnyPort(), backlog, socketOptions);
     }
-    
+
     public static ITcpListener<TAddress> Listen<TAddress>(
         IpEndpoint<TAddress> bindEndpoint,
         int backlog,

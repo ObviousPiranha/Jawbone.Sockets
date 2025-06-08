@@ -6,7 +6,6 @@ namespace Jawbone.Sockets.Mac;
 sealed class MacUdpClientV6 : IUdpClient<IpAddressV6>
 {
     private readonly int _fd;
-    private SockAddrStorage _address;
 
     public InterruptHandling HandleInterruptOnSend { get; set; }
     public InterruptHandling HandleInterruptOnReceive { get; set; }
@@ -29,10 +28,10 @@ sealed class MacUdpClientV6 : IUdpClient<IpAddressV6>
     public IpEndpoint<IpAddressV6> GetSocketName()
     {
         var addressLength = SockAddrStorage.Len;
-        var result = Sys.GetSockName(_fd, out _address, ref addressLength);
+        var result = Sys.GetSockName(_fd, out var address, ref addressLength);
         if (result == -1)
             Sys.Throw(ExceptionMessages.GetSocketName);
-        return _address.GetV6(addressLength);
+        return address.GetV6(addressLength);
     }
 
     public TransferResult Receive(Span<byte> buffer, int timeoutInMilliseconds)
@@ -56,7 +55,7 @@ sealed class MacUdpClientV6 : IUdpClient<IpAddressV6>
                     out buffer.GetPinnableReference(),
                     (nuint)buffer.Length,
                     0,
-                    out _address,
+                    out var address,
                     ref addressLength);
 
                 if (receiveResult == -1)
@@ -69,7 +68,7 @@ sealed class MacUdpClientV6 : IUdpClient<IpAddressV6>
                     goto retryReceive;
                 }
 
-                var origin = _address.GetV6(addressLength);
+                var origin = address.GetV6(addressLength);
                 Debug.Assert(origin == Origin);
                 return new((int)receiveResult);
             }

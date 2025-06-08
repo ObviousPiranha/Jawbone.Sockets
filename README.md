@@ -52,7 +52,22 @@ IpEndpoint<IpAddressV4> endpoint = host.OnPort(5000);
 If you need to discover a host address, you have several options.
 
 ```csharp
-// Iterate through each response using the non-generic IpEndpoint.
+// Simple DNS request!
+IpAddressV4 address = Dns.GetAddressV4("github.com");
+
+// Use a safer method to avoid exceptions.
+if (Dns.TryGetAddressV4("github.com", out IpAddressV4 addr))
+{
+    // ...
+}
+
+// Or iterate through all available endpoints.
+foreach (IpEndpoint<IpAddressV4> endpoint in Dns.QueryV4("github.com"))
+{
+    // Handle just the IPv4 entries.
+}
+
+// Or iterate through each response using the non-generic IpEndpoint.
 foreach (IpEndpoint endpoint in Dns.Query("github.com"))
 {
     if (endpoint.Address.Version == IpAddressVersion.V4)
@@ -66,20 +81,6 @@ foreach (IpEndpoint endpoint in Dns.Query("github.com"))
         // Handle IPv6.
         var ep6 = (IpEndpoint<IpAddressV6>)endpoint;
     }
-}
-
-foreach (IpEndpoint<IpAddressV4> endpoint in Dns.QueryV4("github.com"))
-{
-    // Handle just the IPv4 entries.
-}
-
-// Or use a shortcut to just grab the first address (without a port).
-IpAddressV4 address = Dns.GetAddressV4("github.com");
-
-// Use a safer method to avoid exceptions.
-if (Dns.TryGetAddressV4("github.com", out IpAddressV4 addr))
-{
-    // ...
 }
 ```
 

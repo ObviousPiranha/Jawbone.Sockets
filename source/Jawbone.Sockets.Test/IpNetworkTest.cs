@@ -64,4 +64,12 @@ public class IpNetworkTest
         address.DataU8[^1] = byte.MaxValue;
         Assert.False(network.Contains(address));
     }
+
+    internal static void AssertValuesOutOfRangeThrow<TAddress>() where TAddress : unmanaged, IIpAddress<TAddress>
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => IpNetwork.Create(default(TAddress), -1));
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => IpNetwork.Create(default(TAddress), TAddress.MaxPrefixLength + 1));
+    }
 }

@@ -148,6 +148,15 @@ public readonly struct IpNetwork :
         return TAddress.CreateNetwork(ipAddress, prefixLength);
     }
 
+    public static bool TryCreate<TAddress>(
+        TAddress ipAddress,
+        int prefixLength,
+        out IpNetwork<TAddress> ipNetwork)
+        where TAddress : unmanaged, IIpAddress<TAddress>
+    {
+        return TAddress.TryCreateNetwork(ipAddress, prefixLength, out ipNetwork);
+    }
+
     public static bool operator ==(IpNetwork a, IpNetwork b) => a.Equals(b);
     public static bool operator !=(IpNetwork a, IpNetwork b) => !a.Equals(b);
 }

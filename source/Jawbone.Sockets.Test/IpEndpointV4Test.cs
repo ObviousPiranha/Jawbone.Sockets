@@ -1,5 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Jawbone.Sockets.Test;
@@ -9,12 +8,7 @@ public class IpEndpointV4Test
     [Fact]
     public void Invariants()
     {
-        AssertSize<IpEndpoint<IpAddressV4>>(8);
-
-        static void AssertSize<T>(int size) where T : unmanaged
-        {
-            Assert.Equal(size, Unsafe.SizeOf<T>());
-        }
+        Tools.AssertSize<IpEndpoint<IpAddressV4>>(8);
     }
 
     [Theory]

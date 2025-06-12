@@ -1,6 +1,5 @@
 using System;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Jawbone.Sockets.Test;
@@ -10,15 +9,10 @@ public class IpAddressV4Test
     [Fact]
     public void Invariants()
     {
-        AssertSize<IpAddressV4>(4);
-        AssertSize<IpEndpoint<IpAddressV4>>(8);
+        Tools.AssertSize<IpAddressV4>(4);
+        Tools.AssertSize<IpEndpoint<IpAddressV4>>(8);
         Assert.Equal(IpAddressVersion.V4, IpAddressV4.Version);
         Assert.True(IpAddressV4.Local.IsLoopback);
-
-        static void AssertSize<T>(int size) where T : unmanaged
-        {
-            Assert.Equal(size, Unsafe.SizeOf<T>());
-        }
     }
 
     [Theory]
